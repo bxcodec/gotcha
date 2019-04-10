@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bxcodec/gotcha"
+	"github.com/bxcodec/gotcha/lru/repository"
 )
 
 // Repository ...
@@ -24,8 +25,10 @@ type Repository interface {
 
 // NewLRUCache return the implementations of cache with LRU algorithm
 func NewLRUCache(option gotcha.CacheOption) gotcha.CacheInteractor {
+	repo := repository.New(option.MaxSizeItem, option.MaxMemory)
 	return &Cache{
 		Option: option,
+		repo:   repo,
 	}
 }
 

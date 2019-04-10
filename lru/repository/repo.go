@@ -2,10 +2,8 @@ package repository
 
 import (
 	"container/list"
-	"errors"
 
 	"github.com/bxcodec/gotcha"
-	"github.com/bxcodec/gotcha/lru"
 )
 
 // Repository implements the Repository cache
@@ -16,17 +14,14 @@ type Repository struct {
 	items     map[string]*list.Element
 }
 
-// NewRepository constructs an Repository of the given size
-func NewRepository(size uint64, memory uint64) (lru.Repository, error) {
-	if size <= 0 {
-		return nil, errors.New("Must provide a positive size")
-	}
+// New constructs an Repository of the given size
+func New(size uint64, memory uint64) *Repository {
 	c := &Repository{
 		maxsize:   size,
 		evictList: list.New(),
 		items:     make(map[string]*list.Element),
 	}
-	return c, nil
+	return c
 }
 
 // Set adds a value to the cache.  Returns true if an eviction occurred.
@@ -101,8 +96,8 @@ func (r *Repository) Delete(key string) (ok bool, err error) {
 // removeElement is used to remove a given list element from the cache
 func (r *Repository) removeElement(e *list.Element) {
 	r.evictList.Remove(e)
-	kv := e.Value.(*gotcha.Document)
-	delete(r.items, kv.Key)
+	doc := e.Value.(*gotcha.Document)
+	delete(r.items, doc.Key)
 }
 
 // RemoveOldest removes the oldest item from the cache.
