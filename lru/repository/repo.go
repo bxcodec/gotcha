@@ -8,18 +8,18 @@ import (
 
 // Repository implements the Repository cache
 type Repository struct {
-	maxsize   uint64
-	maxmemory uint64
-	evictList *list.List
-	items     map[string]*list.Element
+	maxsize              uint64
+	maxmemory            uint64
+	fragmentPositionList *list.List
+	items                map[string]*list.Element
 }
 
 // New constructs an Repository of the given size
 func New(size uint64, memory uint64) *Repository {
 	c := &Repository{
-		maxsize:   size,
-		evictList: list.New(),
-		items:     make(map[string]*list.Element),
+		maxsize:              size,
+		fragmentPositionList: list.New(),
+		items:                make(map[string]*list.Element),
 	}
 	return c
 }
@@ -30,15 +30,14 @@ func (r *Repository) Set(doc *gotcha.Document) (err error) {
 	if ent, ok := r.items[doc.Key]; ok {
 		// TODO: (bxcodec)
 		// Check the expiry item
-		r.evictList.MoveToFront(ent)
+		r.fragmentPositionList.MoveToFront(ent)
 		ent.Value.(*gotcha.Document).Value = doc.Value
 		return nil
 	}
 
-	entry := r.evictList.PushFront(doc)
+	entry := r.fragmentPositionList.PushFront(doc)
 	r.items[doc.Key] = entry
-	evict := uint64(r.evictList.Len()) > r.maxsize
-	// Verify size not exceeded
+	evict := uint64(r.fragmentPositionList.Len()) > r.maxsize
 	if evict {
 		r.removeOldest()
 	}
@@ -48,7 +47,7 @@ func (r *Repository) Set(doc *gotcha.Document) (err error) {
 // Get looks up a key's value from the cache.
 func (r *Repository) Get(key string) (res *gotcha.Document, err error) {
 	if ent, ok := r.items[key]; ok {
-		r.evictList.MoveToFront(ent)
+		r.fragmentPositionList.MoveToFront(ent)
 		return ent.Value.(*gotcha.Document), nil
 	}
 	err = gotcha.ErrCacheMissed
@@ -57,7 +56,7 @@ func (r *Repository) Get(key string) (res *gotcha.Document, err error) {
 
 // GetOldest returns the oldest entry
 func (r *Repository) GetOldest() (res *gotcha.Document, err error) {
-	ent := r.evictList.Back()
+	ent := r.fragmentPositionList.Back()
 	if ent != nil {
 		res = ent.Value.(*gotcha.Document)
 		return
@@ -95,14 +94,14 @@ func (r *Repository) Delete(key string) (ok bool, err error) {
 
 // removeElement is used to remove a given list element from the cache
 func (r *Repository) removeElement(e *list.Element) {
-	r.evictList.Remove(e)
+	r.fragmentPositionList.Remove(e)
 	doc := e.Value.(*gotcha.Document)
 	delete(r.items, doc.Key)
 }
 
 // RemoveOldest removes the oldest item from the cache.
 func (r *Repository) RemoveOldest() (res *gotcha.Document, err error) {
-	ent := r.evictList.Back()
+	ent := r.fragmentPositionList.Back()
 	if ent != nil {
 		r.removeElement(ent)
 		res = ent.Value.(*gotcha.Document)
@@ -113,7 +112,7 @@ func (r *Repository) RemoveOldest() (res *gotcha.Document, err error) {
 
 // removeOldest removes the oldest item from the cache.
 func (r *Repository) removeOldest() {
-	ent := r.evictList.Back()
+	ent := r.fragmentPositionList.Back()
 	if ent != nil {
 		r.removeElement(ent)
 	}
@@ -123,7 +122,7 @@ func (r *Repository) removeOldest() {
 func (r *Repository) Keys() (keys []string, err error) {
 	keys = make([]string, len(r.items))
 	i := 0
-	for ent := r.evictList.Back(); ent != nil; ent = ent.Prev() {
+	for ent := r.fragmentPositionList.Back(); ent != nil; ent = ent.Prev() {
 		keys[i] = ent.Value.(*gotcha.Document).Key
 		i++
 	}
@@ -132,7 +131,7 @@ func (r *Repository) Keys() (keys []string, err error) {
 
 // Len returns the number of items in the cache.
 func (r *Repository) Len() (len int64, err error) {
-	len = int64(r.evictList.Len())
+	len = int64(r.fragmentPositionList.Len())
 	return
 }
 
@@ -147,6 +146,6 @@ func (r *Repository) Clear() (err error) {
 	for k := range r.items {
 		delete(r.items, k)
 	}
-	r.evictList.Init()
+	r.fragmentPositionList.Init()
 	return
 }
