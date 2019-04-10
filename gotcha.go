@@ -1,6 +1,9 @@
 package gotcha
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 // Document ...
 type Document struct {
@@ -24,12 +27,17 @@ const (
 	LFUCacheAlgorithm = "lfu"
 )
 
+var (
+	// ErrCacheMissed ...
+	ErrCacheMissed = errors.New("Cache item's missing")
+)
+
 // CacheOption ...
 type CacheOption struct {
 	AlgorithmType string        // represent the algorithm type
 	ExpiryTime    time.Duration // represent the expiry time of each stored item
-	MaxSizeItem   int64         // Max size of item for eviction
-	MaxMemory     int64         // Max Memory of item stored for eviction
+	MaxSizeItem   uint64        // Max size of item for eviction
+	MaxMemory     uint64        // Max Memory of item stored for eviction
 }
 
 // New ...
