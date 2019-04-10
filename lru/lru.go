@@ -1,7 +1,6 @@
 package lru
 
 import (
-	"container/list"
 	"sync"
 	"time"
 
@@ -16,54 +15,67 @@ type Repository interface {
 	Contains(key string) (ok bool)
 	Peek(key string) (res *gotcha.Document, ok bool)
 	Delete(key string) (ok bool, err error)
-	RemoveOldest() (res *gotcha.Document, ok bool)
-	GetOldest() (res *gotcha.Document, ok bool)
-	Keys() []interface{}
-	Len()
+	RemoveOldest() (res *gotcha.Document, err error)
+	GetOldest() (res *gotcha.Document, err error)
+	Keys() (keys []string, err error)
+	Len() (len int64, err error)
 	MemoryUsage() (size int64, err error)
+}
+
+// NewLRUCache return the implementations of cache with LRU algorithm
+func NewLRUCache(option gotcha.CacheOption) gotcha.CacheInteractor {
+	return &Cache{
+		Option: option,
+	}
 }
 
 // Cache ...
 type Cache struct {
 	sync.RWMutex
-	DocumentList list.List
-	Documents    map[string]gotcha.Document
-	// Fragments                       []gotcha.Document
-	// DocumentFragmentsPositionMapper map[int]gotcha.Document
+	repo   Repository
 	Option gotcha.CacheOption
 }
 
 // Set ...
 func (c *Cache) Set(key string, value interface{}) (err error) {
-	document := gotcha.Document{
+	document := &gotcha.Document{
 		Key:        key,
 		Value:      value,
 		StoredTime: time.Now(),
 	}
 	c.Lock()
-	if sizeFit(c.Documents, c.Option.MaxSizeItem) {
-		// document.Position =
-		c.Documents[key] = document
-	}
+	c.repo.Set(document)
 	c.Unlock()
-
-	panic("TODO")
-	return
-}
-
-func sizeFit(docs map[string]gotcha.Document, maxSize uint64) (ok bool) {
-	ok = uint64(len(docs)) < maxSize
 	return
 }
 
 // Get ...
 func (c *Cache) Get(key string) (value interface{}, err error) {
-	panic("TODO")
+	c.RLock()
+	doc, err := c.repo.Get(key)
+	c.RUnlock()
+	if err != nil {
+		return
+	}
+	value = doc.Value
 	return
 }
 
 // Delete ...
 func (c *Cache) Delete(key string) (err error) {
-	panic("TODO")
+	c.Lock()
+	_, err = c.repo.Delete(key)
+	c.Unlock()
+	if err != nil {
+		return
+	}
+	return
+}
+
+// GetKeys ...
+func (c *Cache) GetKeys() (keys []string, err error) {
+	c.RLock()
+	keys, err = c.repo.Keys()
+	c.RUnlock()
 	return
 }

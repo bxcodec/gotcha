@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/bxcodec/gotcha"
+	"github.com/bxcodec/gotcha/lru"
 )
 
 // Repository implements the Repository cache
@@ -16,7 +17,7 @@ type Repository struct {
 }
 
 // NewRepository constructs an Repository of the given size
-func NewRepository(size uint64, memory uint64) (*Repository, error) {
+func NewRepository(size uint64, memory uint64) (lru.Repository, error) {
 	if size <= 0 {
 		return nil, errors.New("Must provide a positive size")
 	}
@@ -26,15 +27,6 @@ func NewRepository(size uint64, memory uint64) (*Repository, error) {
 		items:     make(map[string]*list.Element),
 	}
 	return c, nil
-}
-
-// Clear is used to completely clear the cache.
-func (r *Repository) Clear() (err error) {
-	for k := range r.items {
-		delete(r.items, k)
-	}
-	r.evictList.Init()
-	return
 }
 
 // Set adds a value to the cache.  Returns true if an eviction occurred.
@@ -68,6 +60,16 @@ func (r *Repository) Get(key string) (res *gotcha.Document, err error) {
 	return
 }
 
+// GetOldest returns the oldest entry
+func (r *Repository) GetOldest() (res *gotcha.Document, err error) {
+	ent := r.evictList.Back()
+	if ent != nil {
+		res = ent.Value.(*gotcha.Document)
+		return
+	}
+	return
+}
+
 // Contains checks if a key is in the cache, without updating the recent-ness
 // or deleting it for being stale.
 func (r *Repository) Contains(key string) (ok bool) {
@@ -96,46 +98,21 @@ func (r *Repository) Delete(key string) (ok bool, err error) {
 	return false, nil
 }
 
+// removeElement is used to remove a given list element from the cache
+func (r *Repository) removeElement(e *list.Element) {
+	r.evictList.Remove(e)
+	kv := e.Value.(*gotcha.Document)
+	delete(r.items, kv.Key)
+}
+
 // RemoveOldest removes the oldest item from the cache.
-func (r *Repository) RemoveOldest() (res *gotcha.Document, ok bool) {
+func (r *Repository) RemoveOldest() (res *gotcha.Document, err error) {
 	ent := r.evictList.Back()
 	if ent != nil {
 		r.removeElement(ent)
-		res, ok = ent.Value.(*gotcha.Document)
+		res = ent.Value.(*gotcha.Document)
 		return
 	}
-	return
-}
-
-// GetOldest returns the oldest entry
-func (r *Repository) GetOldest() (res *gotcha.Document, ok bool) {
-	ent := r.evictList.Back()
-	if ent != nil {
-		res, ok = ent.Value.(*gotcha.Document)
-		return
-	}
-	return
-}
-
-// Keys returns a slice of the keys in the cache, from oldest to newest.
-func (r *Repository) Keys() []interface{} {
-	keys := make([]interface{}, len(r.items))
-	i := 0
-	for ent := r.evictList.Back(); ent != nil; ent = ent.Prev() {
-		keys[i] = ent.Value.(*gotcha.Document).Key
-		i++
-	}
-	return keys
-}
-
-// Len returns the number of items in the cache.
-func (r *Repository) Len() int {
-	return r.evictList.Len()
-}
-
-// MemoryUsage returns the number of memory usage for all cache item
-func (r *Repository) MemoryUsage() (size int64, err error) {
-	panic("TODO: (bxcodec)")
 	return
 }
 
@@ -147,9 +124,34 @@ func (r *Repository) removeOldest() {
 	}
 }
 
-// removeElement is used to remove a given list element from the cache
-func (r *Repository) removeElement(e *list.Element) {
-	r.evictList.Remove(e)
-	kv := e.Value.(*gotcha.Document)
-	delete(r.items, kv.Key)
+// Keys returns a slice of the keys in the cache, from oldest to newest.
+func (r *Repository) Keys() (keys []string, err error) {
+	keys = make([]string, len(r.items))
+	i := 0
+	for ent := r.evictList.Back(); ent != nil; ent = ent.Prev() {
+		keys[i] = ent.Value.(*gotcha.Document).Key
+		i++
+	}
+	return
+}
+
+// Len returns the number of items in the cache.
+func (r *Repository) Len() (len int64, err error) {
+	len = int64(r.evictList.Len())
+	return
+}
+
+// MemoryUsage returns the number of memory usage for all cache item
+func (r *Repository) MemoryUsage() (size int64, err error) {
+	panic("TODO: (bxcodec)")
+	return
+}
+
+// Clear is used to completely clear the cache.
+func (r *Repository) Clear() (err error) {
+	for k := range r.items {
+		delete(r.items, k)
+	}
+	r.evictList.Init()
+	return
 }
