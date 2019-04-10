@@ -14,6 +14,7 @@ type CacheInteractor interface {
 	Set(key string, value interface{}) error
 	Get(key string) (val interface{}, err error)
 	Delete(key string) (err error)
+	GetKeys() (keys string, err error)
 }
 
 const (
