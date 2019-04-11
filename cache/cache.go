@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	// ErrCacheMissed ...
-	ErrCacheMissed = errors.New("Cache item's missing")
+	// ErrMissed ...
+	ErrMissed = errors.New("Cache item's missing")
 )
 
 const (

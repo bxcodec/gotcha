@@ -56,7 +56,7 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 		r.fragmentPositionList.MoveToFront(elem)
 		return elem.Value.(*cache.Document), nil
 	}
-	err = cache.ErrCacheMissed
+	err = cache.ErrMissed
 	return
 }
 
@@ -84,7 +84,7 @@ func (r *Repository) Peek(key string) (res *cache.Document, err error) {
 		res = elem.Value.(*cache.Document)
 		return
 	}
-	err = cache.ErrCacheMissed
+	err = cache.ErrMissed
 	return
 }
 

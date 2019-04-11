@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bxcodec/gotcha"
+	"github.com/bxcodec/gotcha/cache"
 	"github.com/bxcodec/gotcha/lru/repository"
 )
 
 func TestSet(t *testing.T) {
 	repo := repository.New(10, 100)
-	doc := &gotcha.Document{
+	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
 		StoredTime: time.Now(),
@@ -36,7 +36,7 @@ func TestSet(t *testing.T) {
 func TestSetMultiple(t *testing.T) {
 	repo := repository.New(5, 100)
 	for i := 1; i <= 10; i++ {
-		doc := &gotcha.Document{
+		doc := &cache.Document{
 			Key:        fmt.Sprintf("key:%d", i),
 			Value:      i,
 			StoredTime: time.Now(),
@@ -52,7 +52,7 @@ func TestSetMultiple(t *testing.T) {
 	for i := 1; i <= 5; i++ {
 		item, err := repo.Peek(fmt.Sprintf("key:%d", i))
 		if err == nil {
-			t.Errorf("expected %v, actual %v", gotcha.ErrCacheMissed, err)
+			t.Errorf("expected %v, actual %v", cache.ErrMissed, err)
 		}
 		if item != nil {
 			t.Errorf("expected %v, actual %v", nil, item)
@@ -73,28 +73,28 @@ func TestSetMultiple(t *testing.T) {
 }
 
 func TestSetWithExistingKey(t *testing.T) {
-	arrDoc := []*gotcha.Document{
-		&gotcha.Document{
+	arrDoc := []*cache.Document{
+		&cache.Document{
 			Key:        "key-1",
 			Value:      "Hello World 1",
 			StoredTime: time.Now(),
 		},
-		&gotcha.Document{
+		&cache.Document{
 			Key:        "key-2",
 			Value:      "Hello World 2",
 			StoredTime: time.Now(),
 		},
-		&gotcha.Document{
+		&cache.Document{
 			Key:        "key-1",
 			Value:      "Hello World 1 Modified",
 			StoredTime: time.Now(),
 		},
-		&gotcha.Document{
+		&cache.Document{
 			Key:        "key-3",
 			Value:      "Hello World 3 Modified",
 			StoredTime: time.Now(),
 		},
-		&gotcha.Document{
+		&cache.Document{
 			Key:        "key-1",
 			Value:      "Hello World 1 Modified Twice",
 			StoredTime: time.Now(),
@@ -123,7 +123,7 @@ func TestSetWithExistingKey(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	repo := repository.New(10, 100)
-	doc := &gotcha.Document{
+	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
 		StoredTime: time.Now(),
