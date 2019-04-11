@@ -14,7 +14,7 @@ type Repository interface {
 	Get(key string) (res *gotcha.Document, err error)
 	Clear() (err error)
 	Contains(key string) (ok bool)
-	Peek(key string) (res *gotcha.Document, ok bool)
+	Peek(key string) (res *gotcha.Document, err error)
 	Delete(key string) (ok bool, err error)
 	RemoveOldest() (res *gotcha.Document, err error)
 	GetOldest() (res *gotcha.Document, err error)

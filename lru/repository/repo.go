@@ -35,12 +35,16 @@ func (r *Repository) Set(doc *gotcha.Document) (err error) {
 		return nil
 	}
 
-	entry := r.fragmentPositionList.PushFront(doc)
-	r.items[doc.Key] = entry
-	evict := uint64(r.fragmentPositionList.Len()) > r.maxsize
-	if evict {
+	elem := r.fragmentPositionList.PushFront(doc)
+	r.items[doc.Key] = elem
+
+	// Remove the oldest if the fragment is full
+	if uint64(r.fragmentPositionList.Len()) > r.maxsize {
 		r.removeOldest()
 	}
+
+	// TODO: (bxcodec)
+	// Remove the oldest if the memory is reach the maximun
 	return nil
 }
 
@@ -73,12 +77,13 @@ func (r *Repository) Contains(key string) (ok bool) {
 
 // Peek returns the key value (or undefined if not found) without updating
 // the "recently used"-ness of the key.
-func (r *Repository) Peek(key string) (res *gotcha.Document, ok bool) {
-	var elem *list.Element
-	if elem, ok = r.items[key]; ok {
-		return elem.Value.(*gotcha.Document), true
+func (r *Repository) Peek(key string) (res *gotcha.Document, err error) {
+	if elem, ok := r.items[key]; ok {
+		res = elem.Value.(*gotcha.Document)
+		return
 	}
-	return nil, ok
+	err = gotcha.ErrCacheMissed
+	return
 }
 
 // Delete removes the provided key from the cache, returning if the
