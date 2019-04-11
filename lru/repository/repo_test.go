@@ -67,7 +67,7 @@ func TestSetMultiple(t *testing.T) {
 		}
 
 		if item == nil {
-			t.Errorf("expected %v, actual %v", "Hello World", err)
+			t.Errorf("expected %v, actual %v", i, err)
 		}
 	}
 }
