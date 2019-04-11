@@ -62,6 +62,8 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 
 // GetOldest returns the oldest element
 func (r *Repository) GetOldest() (res *cache.Document, err error) {
+	// TODO: (bxcodec)
+	// Add Test for this function
 	elem := r.fragmentPositionList.Back()
 	if elem != nil {
 		res = elem.Value.(*cache.Document)
@@ -73,6 +75,8 @@ func (r *Repository) GetOldest() (res *cache.Document, err error) {
 // Contains checks if a key is in the cache, without updating the recent-ness
 // or deleting it for being stale.
 func (r *Repository) Contains(key string) (ok bool) {
+	// TODO: (bxcodec)
+	// Add Test for this function
 	_, ok = r.items[key]
 	return ok
 }
@@ -91,6 +95,8 @@ func (r *Repository) Peek(key string) (res *cache.Document, err error) {
 // Delete removes the provided key from the cache, returning if the
 // key was contained.
 func (r *Repository) Delete(key string) (ok bool, err error) {
+	// TODO: (bxcodec)
+	// Add Test for this function
 	elem, ok := r.items[key]
 	if ok {
 		r.removeElement(elem)
@@ -108,6 +114,8 @@ func (r *Repository) removeElement(e *list.Element) {
 
 // RemoveOldest removes the oldest item from the cache.
 func (r *Repository) RemoveOldest() (res *cache.Document, err error) {
+	// TODO: (bxcodec)
+	// Add Test for this function
 	elem := r.fragmentPositionList.Back()
 	if elem != nil {
 		r.removeElement(elem)
@@ -127,6 +135,8 @@ func (r *Repository) removeOldest() {
 
 // Keys returns a slice of the keys in the cache, from oldest to newest.
 func (r *Repository) Keys() (keys []string, err error) {
+	// TODO: (bxcodec)
+	// Add Test for this function
 	keys = make([]string, len(r.items))
 	i := 0
 	for elem := r.fragmentPositionList.Back(); elem != nil; elem = elem.Prev() {
@@ -150,6 +160,8 @@ func (r *Repository) MemoryUsage() (size int64, err error) {
 
 // Clear is used to completely clear the cache.
 func (r *Repository) Clear() (err error) {
+	// TODO: (bxcodec)
+	// Add Test for this function
 	for k := range r.items {
 		delete(r.items, k)
 	}

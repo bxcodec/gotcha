@@ -40,6 +40,8 @@ type Cache struct {
 }
 
 // Set ...
+// TODO: (bxcodec)
+// Add Test for this function
 func (c *Cache) Set(key string, value interface{}) (err error) {
 	document := &cache.Document{
 		Key:        key,
@@ -53,6 +55,8 @@ func (c *Cache) Set(key string, value interface{}) (err error) {
 }
 
 // Get ...
+// TODO: (bxcodec)
+// Add Test for this function
 func (c *Cache) Get(key string) (value interface{}, err error) {
 	c.RLock()
 	doc, err := c.repo.Get(key)
@@ -65,6 +69,8 @@ func (c *Cache) Get(key string) (value interface{}, err error) {
 }
 
 // Delete ...
+// TODO: (bxcodec)
+// Add Test for this function
 func (c *Cache) Delete(key string) (err error) {
 	c.Lock()
 	_, err = c.repo.Delete(key)
@@ -76,6 +82,8 @@ func (c *Cache) Delete(key string) (err error) {
 }
 
 // GetKeys ...
+// TODO: (bxcodec)
+// Add Test for this function
 func (c *Cache) GetKeys() (keys []string, err error) {
 	c.RLock()
 	keys, err = c.repo.Keys()
@@ -84,6 +92,8 @@ func (c *Cache) GetKeys() (keys []string, err error) {
 }
 
 // ClearCache ...
+// TODO: (bxcodec)
+// Add Test for this function
 func (c *Cache) ClearCache() (err error) {
 	c.Lock()
 	err = c.repo.Clear()

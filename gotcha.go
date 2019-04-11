@@ -32,7 +32,6 @@ func New(options ...*cache.Option) (c cache.Interactor) {
 		// TODO: (bxcodec)
 	}
 
-	panic("TODO")
 	return
 }
 
