@@ -3,7 +3,7 @@ package repository
 import (
 	"container/list"
 
-	"github.com/bxcodec/gotcha"
+	"github.com/bxcodec/gotcha/cache"
 )
 
 // Repository implements the Repository cache
@@ -25,7 +25,7 @@ func New(size uint64, memory uint64) *Repository {
 }
 
 // Set adds a value to the cache.  Returns true if an eviction occurred.
-func (r *Repository) Set(doc *gotcha.Document) (err error) {
+func (r *Repository) Set(doc *cache.Document) (err error) {
 	// Check for existing item
 	if elem, ok := r.items[doc.Key]; ok {
 		// TODO: (bxcodec)
@@ -49,22 +49,22 @@ func (r *Repository) Set(doc *gotcha.Document) (err error) {
 }
 
 // Get looks up a key's value from the cache.
-func (r *Repository) Get(key string) (res *gotcha.Document, err error) {
+func (r *Repository) Get(key string) (res *cache.Document, err error) {
 	if elem, ok := r.items[key]; ok {
 		// TODO: (bxcodec)
 		// Check Expiry Time
 		r.fragmentPositionList.MoveToFront(elem)
-		return elem.Value.(*gotcha.Document), nil
+		return elem.Value.(*cache.Document), nil
 	}
-	err = gotcha.ErrCacheMissed
+	err = cache.ErrCacheMissed
 	return
 }
 
 // GetOldest returns the oldest element
-func (r *Repository) GetOldest() (res *gotcha.Document, err error) {
+func (r *Repository) GetOldest() (res *cache.Document, err error) {
 	elem := r.fragmentPositionList.Back()
 	if elem != nil {
-		res = elem.Value.(*gotcha.Document)
+		res = elem.Value.(*cache.Document)
 		return
 	}
 	return
@@ -79,12 +79,12 @@ func (r *Repository) Contains(key string) (ok bool) {
 
 // Peek returns the key value (or undefined if not found) without updating
 // the "recently used"-ness of the key.
-func (r *Repository) Peek(key string) (res *gotcha.Document, err error) {
+func (r *Repository) Peek(key string) (res *cache.Document, err error) {
 	if elem, ok := r.items[key]; ok {
-		res = elem.Value.(*gotcha.Document)
+		res = elem.Value.(*cache.Document)
 		return
 	}
-	err = gotcha.ErrCacheMissed
+	err = cache.ErrCacheMissed
 	return
 }
 
@@ -102,16 +102,16 @@ func (r *Repository) Delete(key string) (ok bool, err error) {
 // removeElement is used to remove a given list element from the cache
 func (r *Repository) removeElement(e *list.Element) {
 	r.fragmentPositionList.Remove(e)
-	doc := e.Value.(*gotcha.Document)
+	doc := e.Value.(*cache.Document)
 	delete(r.items, doc.Key)
 }
 
 // RemoveOldest removes the oldest item from the cache.
-func (r *Repository) RemoveOldest() (res *gotcha.Document, err error) {
+func (r *Repository) RemoveOldest() (res *cache.Document, err error) {
 	elem := r.fragmentPositionList.Back()
 	if elem != nil {
 		r.removeElement(elem)
-		res = elem.Value.(*gotcha.Document)
+		res = elem.Value.(*cache.Document)
 		return
 	}
 	return
@@ -130,7 +130,7 @@ func (r *Repository) Keys() (keys []string, err error) {
 	keys = make([]string, len(r.items))
 	i := 0
 	for elem := r.fragmentPositionList.Back(); elem != nil; elem = elem.Prev() {
-		keys[i] = elem.Value.(*gotcha.Document).Key
+		keys[i] = elem.Value.(*cache.Document).Key
 		i++
 	}
 	return

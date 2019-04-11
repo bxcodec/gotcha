@@ -4,27 +4,27 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bxcodec/gotcha"
+	"github.com/bxcodec/gotcha/cache"
 	"github.com/bxcodec/gotcha/lru/repository"
 )
 
 // Repository ...
 type Repository interface {
-	Set(doc *gotcha.Document) (err error)
-	Get(key string) (res *gotcha.Document, err error)
+	Set(doc *cache.Document) (err error)
+	Get(key string) (res *cache.Document, err error)
 	Clear() (err error)
 	Contains(key string) (ok bool)
-	Peek(key string) (res *gotcha.Document, err error)
+	Peek(key string) (res *cache.Document, err error)
 	Delete(key string) (ok bool, err error)
-	RemoveOldest() (res *gotcha.Document, err error)
-	GetOldest() (res *gotcha.Document, err error)
+	RemoveOldest() (res *cache.Document, err error)
+	GetOldest() (res *cache.Document, err error)
 	Keys() (keys []string, err error)
 	Len() (len int64, err error)
 	MemoryUsage() (size int64, err error)
 }
 
-// NewLRUCache return the implementations of cache with LRU algorithm
-func NewLRUCache(option gotcha.CacheOption) gotcha.CacheInteractor {
+// NewCache return the implementations of cache with LRU algorithm
+func NewCache(option cache.Option) cache.Interactor {
 	repo := repository.New(option.MaxSizeItem, option.MaxMemory)
 	return &Cache{
 		Option: option,
@@ -36,12 +36,12 @@ func NewLRUCache(option gotcha.CacheOption) gotcha.CacheInteractor {
 type Cache struct {
 	sync.RWMutex
 	repo   Repository
-	Option gotcha.CacheOption
+	Option cache.Option
 }
 
 // Set ...
 func (c *Cache) Set(key string, value interface{}) (err error) {
-	document := &gotcha.Document{
+	document := &cache.Document{
 		Key:        key,
 		Value:      value,
 		StoredTime: time.Now(),

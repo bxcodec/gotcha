@@ -1,48 +1,57 @@
 package gotcha
 
 import (
-	"errors"
-	"time"
+	"github.com/bxcodec/gotcha/cache"
+	"github.com/bxcodec/gotcha/lru"
 )
-
-// Document ...
-type Document struct {
-	Key        string
-	Value      interface{}
-	StoredTime time.Time
-}
-
-// CacheInteractor ...
-type CacheInteractor interface {
-	Set(key string, value interface{}) error
-	Get(key string) (val interface{}, err error)
-	Delete(key string) (err error)
-	GetKeys() (keys []string, err error)
-	ClearCache() (err error)
-}
-
-const (
-	// LRUCacheAlgorithm ...
-	LRUCacheAlgorithm = "lru"
-	// LFUCacheAlgorithm ...
-	LFUCacheAlgorithm = "lfu"
-)
-
-var (
-	// ErrCacheMissed ...
-	ErrCacheMissed = errors.New("Cache item's missing")
-)
-
-// CacheOption ...
-type CacheOption struct {
-	AlgorithmType string        // represent the algorithm type
-	ExpiryTime    time.Duration // represent the expiry time of each stored item
-	MaxSizeItem   uint64        // Max size of item for eviction
-	MaxMemory     uint64        // Max Memory of item stored for eviction
-}
 
 // New ...
-func New(option *CacheOption) (c CacheInteractor) {
+func New(options ...*cache.Option) (c cache.Interactor) {
+	option := mergeOptions(options...)
+	if option.MaxMemory == 0 { // Unlimited
+		// option.MaxMemory = (get max memory)
+	}
+
+	if option.MaxSizeItem == 0 {
+		// Use default
+		option.MaxSizeItem = cache.DefaultCacheSize
+	}
+
+	if option.AlgorithmType == "" {
+		// Use LRU Default
+		option.AlgorithmType = cache.LRUCacheAlgorithm
+	}
+
+	if option.ExpiryTime == 0 {
+		// Use default expiry time
+		option.ExpiryTime = cache.DefaultExpiryTime
+	}
+
+	switch option.AlgorithmType {
+	case cache.LRUCacheAlgorithm:
+		c = lru.NewCache(*option)
+	case cache.LFUCacheAlgorithm:
+	}
+
 	panic("TODO")
+	return
+}
+
+func mergeOptions(options ...*cache.Option) (opts *cache.Option) {
+	opts = new(cache.Option)
+	for _, op := range options {
+		if op.AlgorithmType != "" {
+			opts.AlgorithmType = op.AlgorithmType
+		}
+		if op.ExpiryTime != 0 {
+			opts.ExpiryTime = op.ExpiryTime
+		}
+		if op.MaxMemory != 0 {
+			opts.MaxMemory = op.MaxMemory
+		}
+		if op.MaxSizeItem != 0 {
+			opts.MaxSizeItem = op.MaxSizeItem
+		}
+	}
 	return
 }
