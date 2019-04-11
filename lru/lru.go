@@ -82,3 +82,11 @@ func (c *Cache) GetKeys() (keys []string, err error) {
 	c.RUnlock()
 	return
 }
+
+// ClearCache ...
+func (c *Cache) ClearCache() (err error) {
+	c.Lock()
+	err = c.repo.Clear()
+	c.Unlock()
+	return
+}

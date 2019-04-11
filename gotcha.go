@@ -18,6 +18,7 @@ type CacheInteractor interface {
 	Get(key string) (val interface{}, err error)
 	Delete(key string) (err error)
 	GetKeys() (keys []string, err error)
+	ClearCache() (err error)
 }
 
 const (

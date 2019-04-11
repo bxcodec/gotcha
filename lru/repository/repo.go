@@ -60,7 +60,7 @@ func (r *Repository) Get(key string) (res *gotcha.Document, err error) {
 	return
 }
 
-// GetOldest returns the oldest entry
+// GetOldest returns the oldest element
 func (r *Repository) GetOldest() (res *gotcha.Document, err error) {
 	elem := r.fragmentPositionList.Back()
 	if elem != nil {
