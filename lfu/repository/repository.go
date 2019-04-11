@@ -2,6 +2,7 @@ package repository
 
 import (
 	"container/list"
+	"fmt"
 
 	"github.com/bxcodec/gotcha/cache"
 )
@@ -9,17 +10,30 @@ import (
 // Repository ...
 type Repository struct {
 	frequencyList *list.List
-	byKey         map[string]*list.Element
+	byKey         map[string]*cacheItem
+	freqHead      *list.Element
 }
 
 type cacheItem struct {
-	doc      *cache.Document
-	freqHead *list.Element
+	data   *cache.Document
+	parent *list.Element
 }
 
 type frequencyItem struct {
-	entries   map[string]bool
-	frequency int
+	// entries   map[string]bool
+	doc       *cache.Document
+	frequency uint64
+}
+
+func NewRepository() (repo *Repository) {
+	repo = &Repository{
+		frequencyList: list.New(),
+		byKey:         make(map[string]*cacheItem),
+		freqHead: &list.Element{
+			Value: &frequencyItem{},
+		},
+	}
+	return
 }
 
 // Get ...
@@ -29,26 +43,78 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 		err = cache.ErrMissed
 		return
 	}
-	r.addFrequency(elem)
-	res = elem.Value.(*cache.Document)
+	res = elem.data
+
+	freq := elem.parent
+	nextFreq := freq.Next()
+	freqVal := (freq.Value.(*frequencyItem))
+	if nextFreq == nil {
+		freqVal.frequency++
+		freq.Value = freqVal
+		r.frequencyList.MoveAfter(freq, freq)
+		return
+	}
+
+	nextFreqVal := (nextFreq.Value.(*frequencyItem))
+	if nextFreq == r.freqHead || freqVal.frequency != (nextFreqVal.frequency+1) {
+		freqVal.frequency = (nextFreqVal.frequency + 1)
+		freq.Value = freqVal
+		r.frequencyList.MoveAfter(freq, nextFreq)
+	}
+
+	// TODO: (bxcodec)
+	// Check Expiry Time
+
+	// fmt.Println("++++++++")
+	// r.printList()
+	// fmt.Println("++++++++")
 	return
 }
 
-func (r *Repository) addFrequency(elem *list.Element) {
-	// TODO: (bxcodec)
+func (r *Repository) printList() {
+	for elem := r.frequencyList.Back(); elem != nil; elem = elem.Prev() {
+		first := elem.Value.(*frequencyItem)
+		fmt.Printf("Elem Freq: %+v\n", first.frequency)
+		fmt.Printf("Elem Doc: %+v\n", first.doc)
+	}
 }
 
 // Set ...
 func (r *Repository) Set(doc *cache.Document) (err error) {
 	// Check for existing item
 	if elem, ok := r.byKey[doc.Key]; ok {
-		elem.Value = doc
+		elem.data = doc
 		return nil
 	}
 
+	freq := r.freqHead.Next()
+	freqVal := &frequencyItem{}
+	if freq == nil {
+		freqVal = &frequencyItem{
+			doc:       doc,
+			frequency: 1,
+		}
+		freq = r.frequencyList.PushFront(freqVal)
+	}
+
+	freqVal, _ = freq.Value.(*frequencyItem)
+	if freqVal.frequency != 1 {
+		freqVal.frequency = 1
+		r.frequencyList.MoveAfter(freq, r.freqHead)
+	}
+
+	freqVal.doc = doc
+	cacheItem := &cacheItem{
+		data:   doc,
+		parent: freq,
+	}
+	r.byKey[doc.Key] = cacheItem
 	// elem := r.fragmentPositionList.PushFront(doc)
 	// r.items[doc.Key] = elem
 
-	panic("TODO")
+	// fmt.Printf("By Key: %+v\n", r.byKey)
+	// fmt.Println("Len", r.frequencyList.Len())
+	// r.printList()
+	// fmt.Println("=======")
 	return
 }
