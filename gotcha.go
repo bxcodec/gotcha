@@ -1,39 +1,55 @@
 package gotcha
 
-import "time"
-
-// Document ...
-type Document struct {
-	Key        string
-	Value      interface{}
-	StoredTime time.Time
-}
-
-// CacheInteractor ...
-type CacheInteractor interface {
-	Set(key string, value interface{}) error
-	Get(key string) (val interface{}, err error)
-	Delete(key string) (err error)
-	GetKeys() (keys string, err error)
-}
-
-const (
-	// LRUCacheAlgorithm ...
-	LRUCacheAlgorithm = "lru"
-	// LFUCacheAlgorithm ...
-	LFUCacheAlgorithm = "lfu"
+import (
+	"github.com/bxcodec/gotcha/cache"
+	"github.com/bxcodec/gotcha/lru"
 )
 
-// CacheOption ...
-type CacheOption struct {
-	AlgorithmType string        // represent the algorithm type
-	ExpiryTime    time.Duration // represent the expiry time of each stored item
-	MaxSizeItem   int64         // Max size of item for eviction
-	MaxMemory     int64         // Max Memory of item stored for eviction
+// New ...
+func New(options ...*cache.Option) (c cache.Interactor) {
+	option := mergeOptions(options...)
+	if option.MaxMemory == 0 { // Unlimited
+		// TODO: (bxcodec)
+		// option.MaxMemory = (get max memory)
+	}
+	if option.MaxSizeItem == 0 {
+		// Use default
+		option.MaxSizeItem = cache.DefaultSize
+	}
+	if option.AlgorithmType == "" {
+		// Use LRU Default
+		option.AlgorithmType = cache.LRUAlgorithm
+	}
+	if option.ExpiryTime == 0 {
+		// Use default expiry time
+		option.ExpiryTime = cache.DefaultExpiryTime
+	}
+
+	switch option.AlgorithmType {
+	case cache.LRUAlgorithm:
+		c = lru.NewCache(*option)
+	case cache.LFUAlgorithm:
+		// TODO: (bxcodec)
+	}
+
+	return
 }
 
-// New ...
-func New(option *CacheOption) (c CacheInteractor) {
-	panic("TODO")
+func mergeOptions(options ...*cache.Option) (opts *cache.Option) {
+	opts = new(cache.Option)
+	for _, op := range options {
+		if op.AlgorithmType != "" {
+			opts.AlgorithmType = op.AlgorithmType
+		}
+		if op.ExpiryTime != 0 {
+			opts.ExpiryTime = op.ExpiryTime
+		}
+		if op.MaxMemory != 0 {
+			opts.MaxMemory = op.MaxMemory
+		}
+		if op.MaxSizeItem != 0 {
+			opts.MaxSizeItem = op.MaxSizeItem
+		}
+	}
 	return
 }
