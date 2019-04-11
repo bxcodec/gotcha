@@ -9,28 +9,27 @@ import (
 func New(options ...*cache.Option) (c cache.Interactor) {
 	option := mergeOptions(options...)
 	if option.MaxMemory == 0 { // Unlimited
+		// TODO: (bxcodec)
 		// option.MaxMemory = (get max memory)
 	}
-
 	if option.MaxSizeItem == 0 {
 		// Use default
-		option.MaxSizeItem = cache.DefaultCacheSize
+		option.MaxSizeItem = cache.DefaultSize
 	}
-
 	if option.AlgorithmType == "" {
 		// Use LRU Default
-		option.AlgorithmType = cache.LRUCacheAlgorithm
+		option.AlgorithmType = cache.LRUAlgorithm
 	}
-
 	if option.ExpiryTime == 0 {
 		// Use default expiry time
 		option.ExpiryTime = cache.DefaultExpiryTime
 	}
 
 	switch option.AlgorithmType {
-	case cache.LRUCacheAlgorithm:
+	case cache.LRUAlgorithm:
 		c = lru.NewCache(*option)
-	case cache.LFUCacheAlgorithm:
+	case cache.LFUAlgorithm:
+		// TODO: (bxcodec)
 	}
 
 	panic("TODO")

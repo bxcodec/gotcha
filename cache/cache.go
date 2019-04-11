@@ -11,12 +11,12 @@ var (
 )
 
 const (
-	// LRUCacheAlgorithm ...
-	LRUCacheAlgorithm = "lru"
-	// LFUCacheAlgorithm ...
-	LFUCacheAlgorithm = "lfu"
-	// DefaultCacheSize ..
-	DefaultCacheSize = 100
+	// LRUAlgorithm ...
+	LRUAlgorithm = "lru"
+	// LFUAlgorithm ...
+	LFUAlgorithm = "lfu"
+	// DefaultSize ..
+	DefaultSize = 100
 	// DefaultExpiryTime ...
 	DefaultExpiryTime = time.Second * 10
 )
