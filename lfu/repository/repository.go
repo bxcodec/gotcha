@@ -20,8 +20,7 @@ type cacheItem struct {
 }
 
 type frequencyItem struct {
-	// entries   map[string]bool
-	doc       *cache.Document
+	key       string
 	frequency uint64
 }
 
@@ -52,6 +51,9 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 		freqVal.frequency++
 		freq.Value = freqVal
 		r.frequencyList.MoveAfter(freq, freq)
+		fmt.Println("++++++++")
+		r.printList()
+		fmt.Println("++++++++")
 		return
 	}
 
@@ -65,9 +67,9 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 	// TODO: (bxcodec)
 	// Check Expiry Time
 
-	// fmt.Println("++++++++")
-	// r.printList()
-	// fmt.Println("++++++++")
+	fmt.Println("++++++++")
+	r.printList()
+	fmt.Println("++++++++")
 	return
 }
 
@@ -75,7 +77,7 @@ func (r *Repository) printList() {
 	for elem := r.frequencyList.Back(); elem != nil; elem = elem.Prev() {
 		first := elem.Value.(*frequencyItem)
 		fmt.Printf("Elem Freq: %+v\n", first.frequency)
-		fmt.Printf("Elem Doc: %+v\n", first.doc)
+		fmt.Printf("Elem Doc: %+v\n", first.key)
 	}
 }
 
@@ -91,7 +93,8 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 	freqVal := &frequencyItem{}
 	if freq == nil {
 		freqVal = &frequencyItem{
-			doc:       doc,
+			// doc:       doc,
+			key:       doc.Key,
 			frequency: 1,
 		}
 		freq = r.frequencyList.PushFront(freqVal)
@@ -103,7 +106,7 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 		r.frequencyList.MoveAfter(freq, r.freqHead)
 	}
 
-	freqVal.doc = doc
+	freqVal.key = doc.Key
 	cacheItem := &cacheItem{
 		data:   doc,
 		parent: freq,
@@ -114,7 +117,21 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 
 	// fmt.Printf("By Key: %+v\n", r.byKey)
 	// fmt.Println("Len", r.frequencyList.Len())
-	// r.printList()
-	// fmt.Println("=======")
+	r.printList()
+	fmt.Println("=======")
+	return
+}
+
+// GetLFU ...
+func (r *Repository) GetLFU() (res *cache.Document, err error) {
+	elem := r.frequencyList.Front()
+	freq := elem.Value.(*frequencyItem)
+
+	cacheItem, ok := r.byKey[freq.key]
+	if !ok {
+		err = cache.ErrMissed
+		return
+	}
+	res = cacheItem.data
 	return
 }

@@ -65,31 +65,31 @@ func TestSetWithMultipleKeyExists(t *testing.T) {
 func TestGet(t *testing.T) {
 	repo := repository.NewRepository()
 	arrDoc := []*cache.Document{
-		// &cache.Document{
-		// 	Key:        "key-1",
-		// 	Value:      "Hello World 1",
-		// 	StoredTime: time.Now(),
-		// },
+		&cache.Document{
+			Key:        "key-1",
+			Value:      "Hello World 1",
+			StoredTime: time.Now(),
+		},
 		&cache.Document{
 			Key:        "key-2",
 			Value:      "Hello World 2",
 			StoredTime: time.Now(),
 		},
-		// &cache.Document{
-		// 	Key:        "key-1",
-		// 	Value:      "Hello World 1 Modified",
-		// 	StoredTime: time.Now(),
-		// },
-		// &cache.Document{
-		// 	Key:        "key-3",
-		// 	Value:      "Hello World 3 Modified",
-		// 	StoredTime: time.Now(),
-		// },
-		// &cache.Document{
-		// 	Key:        "key-1",
-		// 	Value:      "Hello World 1 Modified Twice",
-		// 	StoredTime: time.Now(),
-		// },
+		&cache.Document{
+			Key:        "key-1",
+			Value:      "Hello World 1 Modified",
+			StoredTime: time.Now(),
+		},
+		&cache.Document{
+			Key:        "key-3",
+			Value:      "Hello World 3 Modified",
+			StoredTime: time.Now(),
+		},
+		&cache.Document{
+			Key:        "key-1",
+			Value:      "Hello World 1 Modified Twice",
+			StoredTime: time.Now(),
+		},
 	}
 
 	for _, doc := range arrDoc {
@@ -112,4 +112,19 @@ func TestGet(t *testing.T) {
 	}
 
 	fmt.Println("Res: ", res2.Value)
+
+	res3, err := repo.Get("key-3")
+	if err != nil {
+		t.Errorf("expected %v, actual %v", nil, err)
+	}
+
+	fmt.Println("Res3: ", res3.Value)
+
+	lfu, err := repo.GetLFU()
+	if err != nil {
+		t.Errorf("expected %v, actual %v", nil, err)
+	}
+
+	fmt.Println("LFU: ", lfu.Value)
+
 }
