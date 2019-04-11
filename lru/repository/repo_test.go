@@ -144,3 +144,38 @@ func TestGet(t *testing.T) {
 		t.Errorf("expected %v, actual %v", "Hello World", err)
 	}
 }
+
+func BenchmarkSetItem(b *testing.B) {
+	repo := repository.New(10, 100)
+	preDoc := &cache.Document{
+		Key:        "key-1",
+		Value:      "Hello World",
+		StoredTime: time.Now(),
+	}
+	err := repo.Set(preDoc)
+	if err != nil {
+		b.Errorf("expected %v, actual %v", nil, err)
+	}
+	doc := &cache.Document{
+		Key:        "key-2",
+		Value:      "Hello World",
+		StoredTime: time.Now(),
+	}
+	for i := 0; i < b.N; i++ {
+
+		err := repo.Set(doc)
+		if err != nil {
+			b.Errorf("expected %v, actual %v", nil, err)
+		}
+	}
+	// Check if the item is exists
+	item, err := repo.Peek("key-2")
+
+	if err != nil {
+		b.Errorf("expected %v, actual %v", nil, err)
+	}
+
+	if item == nil {
+		b.Errorf("expected %v, actual %v", "Hello World", err)
+	}
+}
