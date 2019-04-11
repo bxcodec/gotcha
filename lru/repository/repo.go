@@ -31,7 +31,7 @@ func (r *Repository) Set(doc *gotcha.Document) (err error) {
 		// TODO: (bxcodec)
 		// Check the expiry item
 		r.fragmentPositionList.MoveToFront(elem)
-		elem.Value.(*gotcha.Document).Value = doc.Value
+		elem.Value = doc
 		return nil
 	}
 
@@ -51,6 +51,8 @@ func (r *Repository) Set(doc *gotcha.Document) (err error) {
 // Get looks up a key's value from the cache.
 func (r *Repository) Get(key string) (res *gotcha.Document, err error) {
 	if elem, ok := r.items[key]; ok {
+		// TODO: (bxcodec)
+		// Check Expiry Time
 		r.fragmentPositionList.MoveToFront(elem)
 		return elem.Value.(*gotcha.Document), nil
 	}
