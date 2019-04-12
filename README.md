@@ -25,7 +25,7 @@ See documentation in [Godoc](https://godoc.org/github.com/bxcodec/gotcha)
 ```shell
 go get -u github.com/bxcodec/faker/v3
 ```
-# Example
+## Example
 
 ```go
 cache:=gotcha.New()
