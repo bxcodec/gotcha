@@ -2,6 +2,7 @@ package repository
 
 import (
 	"container/list"
+	"time"
 
 	"github.com/bxcodec/gotcha/cache"
 )
@@ -12,14 +13,16 @@ type Repository struct {
 	maxmemory            uint64
 	fragmentPositionList *list.List
 	items                map[string]*list.Element
+	expiryTresHold       time.Duration
 }
 
 // New constructs an Repository of the given size
-func New(size, memory uint64) *Repository {
+func New(size, memory uint64, expiryTresHold time.Duration) *Repository {
 	c := &Repository{
 		maxsize:              size,
 		fragmentPositionList: list.New(),
 		items:                make(map[string]*list.Element),
+		expiryTresHold:       expiryTresHold,
 	}
 	return c
 }
@@ -112,19 +115,6 @@ func (r *Repository) removeElement(e *list.Element) {
 	delete(r.items, doc.Key)
 }
 
-// RemoveOldest removes the oldest item from the cache.
-func (r *Repository) RemoveOldest() (res *cache.Document, err error) {
-	// TODO: (bxcodec)
-	// Add Test for this function
-	elem := r.fragmentPositionList.Back()
-	if elem != nil {
-		r.removeElement(elem)
-		res = elem.Value.(*cache.Document)
-		return
-	}
-	return
-}
-
 // removeOldest removes the oldest item from the cache.
 func (r *Repository) removeOldest() {
 	elem := r.fragmentPositionList.Back()
@@ -147,7 +137,7 @@ func (r *Repository) Keys() (keys []string, err error) {
 }
 
 // Len returns the number of items in the cache.
-func (r *Repository) Len() (len int64, err error) {
+func (r *Repository) Len() (len int64) {
 	len = int64(r.fragmentPositionList.Len())
 	return
 }
