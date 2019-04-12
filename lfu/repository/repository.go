@@ -184,6 +184,11 @@ func (r *Repository) Clear() (err error) {
 	return
 }
 
+// Len ...
+func (r *Repository) Len() int {
+	return len(r.byKey)
+}
+
 // Contains ...
 func (r *Repository) Contains(key string) (ok bool) {
 	_, ok = r.byKey[key]
