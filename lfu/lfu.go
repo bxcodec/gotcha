@@ -1,11 +1,11 @@
-package lru
+package lfu
 
 import (
 	"sync"
 	"time"
 
 	"github.com/bxcodec/gotcha/cache"
-	"github.com/bxcodec/gotcha/lru/repository"
+	"github.com/bxcodec/gotcha/lfu/repository"
 )
 
 // Repository ...
@@ -20,7 +20,7 @@ type Repository interface {
 
 // NewCache return the implementations of cache with LRU algorithm
 func NewCache(option cache.Option) cache.Interactor {
-	repo := repository.New(option.MaxSizeItem, option.MaxMemory)
+	repo := repository.New(option.MaxSizeItem, option.MaxMemory, option.ExpiryTime)
 	return &Cache{
 		Option: option,
 		repo:   repo,
@@ -35,50 +35,40 @@ type Cache struct {
 }
 
 // Set ...
-// TODO: (bxcodec)
-// Add Test for this function
 func (c *Cache) Set(key string, value interface{}) (err error) {
-	document := &cache.Document{
+	doc := &cache.Document{
 		Key:        key,
 		Value:      value,
 		StoredTime: time.Now().Unix(),
 	}
+
 	c.Lock()
-	c.repo.Set(document)
+	err = c.repo.Set(doc)
 	c.Unlock()
 	return
 }
 
 // Get ...
-// TODO: (bxcodec)
-// Add Test for this function
-func (c *Cache) Get(key string) (value interface{}, err error) {
+func (c *Cache) Get(key string) (val interface{}, err error) {
 	c.RLock()
 	doc, err := c.repo.Get(key)
 	c.RUnlock()
 	if err != nil {
 		return
 	}
-	value = doc.Value
+	val = doc.Value
 	return
 }
 
 // Delete ...
-// TODO: (bxcodec)
-// Add Test for this function
 func (c *Cache) Delete(key string) (err error) {
 	c.Lock()
 	_, err = c.repo.Delete(key)
 	c.Unlock()
-	if err != nil {
-		return
-	}
 	return
 }
 
 // GetKeys ...
-// TODO: (bxcodec)
-// Add Test for this function
 func (c *Cache) GetKeys() (keys []string, err error) {
 	c.RLock()
 	keys, err = c.repo.Keys()
@@ -87,8 +77,6 @@ func (c *Cache) GetKeys() (keys []string, err error) {
 }
 
 // ClearCache ...
-// TODO: (bxcodec)
-// Add Test for this function
 func (c *Cache) ClearCache() (err error) {
 	c.Lock()
 	err = c.repo.Clear()
