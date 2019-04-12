@@ -219,7 +219,7 @@ func TestSetWithFrequency1IsNotExists(t *testing.T) {
 
 }
 func BenchmarkSetItem(b *testing.B) {
-	repo := repository.New(5000, 100, time.Second*40)
+	repo := repository.New(15000, 100, time.Second*40)
 	preDoc := &cache.Document{
 		Key:        "key-1",
 		Value:      "Hello World",

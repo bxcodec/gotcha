@@ -25,7 +25,7 @@ type lfuItem struct {
 
 type frequencyItem struct {
 	frequency uint64
-	// TODO: (bxcodec) Change to Set type if possible
+	// TODO: (bxcodec) Change to Set data structures if possible
 	// In the paper of Prof. Ketan Shah this items using SET
 	// since SET is not available in Golang, I just use Map here
 	items map[*lfuItem]bool
