@@ -134,7 +134,6 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 	if uint64(len(r.byKey)) > r.maxSize {
 		r.removeLfuOldest()
 	}
-
 	return
 }
 

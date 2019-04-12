@@ -1,6 +1,7 @@
 package repository_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -217,10 +218,8 @@ func TestSetWithFrequency1IsNotExists(t *testing.T) {
 	}
 
 }
-
-/*
 func BenchmarkSetItem(b *testing.B) {
-	repo := repository.New(5,100)
+	repo := repository.New(5000, 100, time.Second*40)
 	preDoc := &cache.Document{
 		Key:        "key-1",
 		Value:      "Hello World",
@@ -236,12 +235,11 @@ func BenchmarkSetItem(b *testing.B) {
 		StoredTime: time.Now().Add(time.Second * -1).Unix(),
 	}
 	for i := 0; i < b.N; i++ {
-
-		doc.Key = fmt.Sprintf("key-%d", i)
-		err := repo.Set(doc)
+		temp := *doc
+		temp.Key = fmt.Sprintf("key-%d", i)
+		err := repo.Set(&temp)
 		if err != nil {
 			b.Fatalf("expected %v, actual %v", nil, err)
 		}
 	}
 }
-*/
