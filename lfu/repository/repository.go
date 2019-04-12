@@ -31,7 +31,8 @@ type frequencyItem struct {
 	items map[*lfuItem]bool
 }
 
-func NewRepository(maxSize, maxMemory uint64, expiryTreshold time.Duration) (repo *Repository) {
+// New ...
+func New(maxSize, maxMemory uint64, expiryTreshold time.Duration) (repo *Repository) {
 	repo = &Repository{
 		frequencyList:  list.New(),
 		byKey:          make(map[string]*lfuItem),
@@ -42,6 +43,7 @@ func NewRepository(maxSize, maxMemory uint64, expiryTreshold time.Duration) (rep
 	return
 }
 
+// Get ...
 func (r *Repository) Get(key string) (res *cache.Document, err error) {
 	tmp := r.byKey[key]
 	if tmp == nil {
@@ -81,6 +83,7 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 	return
 }
 
+// Set ...
 func (r *Repository) Set(doc *cache.Document) (err error) {
 	if _, ok := r.byKey[doc.Key]; ok {
 		// TODO: (bxcodec)
@@ -170,5 +173,29 @@ func (r *Repository) removeLfuOldest() (oldestItem *lfuItem) {
 	if len(freqItem.items) == 0 {
 		r.frequencyList.Remove(lfuList)
 	}
+	return
+}
+
+// Clear ...
+func (r *Repository) Clear() (err error) {
+	panic("TODO")
+	return
+}
+
+// Contains ...
+func (r *Repository) Contains(key string) (ok bool) {
+	panic("TODO")
+	return
+}
+
+// Delete ...
+func (r *Repository) Delete(key string) (ok bool, err error) {
+	panic("TODO")
+	return
+}
+
+// Keys ...
+func (r *Repository) Keys() (keys []string, err error) {
+	panic("TODO")
 	return
 }

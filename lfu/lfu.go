@@ -2,8 +2,10 @@ package lfu
 
 import (
 	"sync"
+	"time"
 
 	"github.com/bxcodec/gotcha/cache"
+	"github.com/bxcodec/gotcha/lfu/repository"
 )
 
 // Repository ...
@@ -18,8 +20,10 @@ type Repository interface {
 
 // NewCache return the implementations of cache with LRU algorithm
 func NewCache(option cache.Option) cache.Interactor {
+	repo := repository.New(option.MaxSizeItem, option.MaxMemory, option.ExpiryTime)
 	return &Cache{
 		Option: option,
+		repo:   repo,
 	}
 }
 
@@ -31,26 +35,51 @@ type Cache struct {
 }
 
 // Set ...
-func (c *Cache) Set(key string, value interface{}) error {
-	panic("TODO: (bxcodec)")
+func (c *Cache) Set(key string, value interface{}) (err error) {
+	doc := &cache.Document{
+		Key:        key,
+		Value:      value,
+		StoredTime: time.Now().Unix(),
+	}
+
+	c.Lock()
+	err = c.repo.Set(doc)
+	c.Unlock()
+	return
 }
 
 // Get ...
 func (c *Cache) Get(key string) (val interface{}, err error) {
-	panic("TODO: (bxcodec)")
+	c.RLock()
+	doc, err := c.repo.Get(key)
+	c.RUnlock()
+	if err != nil {
+		return
+	}
+	val = doc.Value
+	return
 }
 
 // Delete ...
 func (c *Cache) Delete(key string) (err error) {
-	panic("TODO: (bxcodec)")
+	c.Lock()
+	_, err = c.repo.Delete(key)
+	c.Unlock()
+	return
 }
 
 // GetKeys ...
 func (c *Cache) GetKeys() (keys []string, err error) {
-	panic("TODO: (bxcodec)")
+	c.RLock()
+	keys, err = c.repo.Keys()
+	c.RUnlock()
+	return
 }
 
 // ClearCache ...
 func (c *Cache) ClearCache() (err error) {
-	panic("TODO: (bxcodec)")
+	c.Lock()
+	err = c.repo.Clear()
+	c.Unlock()
+	return
 }
