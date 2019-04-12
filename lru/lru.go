@@ -14,13 +14,8 @@ type Repository interface {
 	Get(key string) (res *cache.Document, err error)
 	Clear() (err error)
 	Contains(key string) (ok bool)
-	Peek(key string) (res *cache.Document, err error)
 	Delete(key string) (ok bool, err error)
-	RemoveOldest() (res *cache.Document, err error)
-	GetOldest() (res *cache.Document, err error)
 	Keys() (keys []string, err error)
-	Len() (len int64, err error)
-	MemoryUsage() (size int64, err error)
 }
 
 // NewCache return the implementations of cache with LRU algorithm

@@ -11,10 +11,11 @@ import (
 
 // Repository ...
 type Repository struct {
-	frequencyList *list.List // will store list of frequencyItem
-	byKey         map[string]*lfuItem
-	maxSize       uint64
-	maxMemory     uint64
+	frequencyList  *list.List // will store list of frequencyItem
+	byKey          map[string]*lfuItem
+	maxSize        uint64
+	maxMemory      uint64
+	expiryTreshold time.Duration
 }
 
 type lfuItem struct {
@@ -30,12 +31,13 @@ type frequencyItem struct {
 	items map[*lfuItem]bool
 }
 
-func NewRepository(maxSize, maxMemory uint64) (repo *Repository) {
+func NewRepository(maxSize, maxMemory uint64, expiryTreshold time.Duration) (repo *Repository) {
 	repo = &Repository{
-		frequencyList: list.New(),
-		byKey:         make(map[string]*lfuItem),
-		maxMemory:     maxMemory,
-		maxSize:       maxSize,
+		frequencyList:  list.New(),
+		byKey:          make(map[string]*lfuItem),
+		maxMemory:      maxMemory,
+		maxSize:        maxSize,
+		expiryTreshold: expiryTreshold,
 	}
 	return
 }

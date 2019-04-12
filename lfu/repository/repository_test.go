@@ -8,9 +8,8 @@ import (
 	"github.com/bxcodec/gotcha/lfu/repository"
 )
 
-/*
 func TestSet(t *testing.T) {
-	repo := repository.NewRepository(5, 100)
+	repo := repository.NewRepository(5, 100, time.Second*5)
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
@@ -51,7 +50,7 @@ func TestSetWithMultipleKeyExists(t *testing.T) {
 			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
 	}
-	repo := repository.NewRepository(5, 100)
+	repo := repository.NewRepository(5, 100, time.Second*5)
 	for _, doc := range arrDoc {
 		err := repo.Set(doc)
 		if err != nil {
@@ -61,7 +60,7 @@ func TestSetWithMultipleKeyExists(t *testing.T) {
 }
 
 func TestGetOne(t *testing.T) {
-	repo := repository.NewRepository(5, 100)
+	repo := repository.NewRepository(5, 100, time.Second*5)
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
@@ -82,10 +81,9 @@ func TestGetOne(t *testing.T) {
 		t.Fatalf("expected %v, actual %v", doc.Value, res.Value)
 	}
 }
-*/
 
 func TestGetWithMultipleSet(t *testing.T) {
-	repo := repository.NewRepository(4, 100)
+	repo := repository.NewRepository(4, 100, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -186,7 +184,7 @@ func TestGetWithMultipleSet(t *testing.T) {
 }
 
 func TestSetWithFrequency1IsNotExists(t *testing.T) {
-	repo := repository.NewRepository(5, 100)
+	repo := repository.NewRepository(5, 100, time.Second*5)
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",

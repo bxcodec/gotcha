@@ -15,7 +15,7 @@ type Repository struct {
 }
 
 // New constructs an Repository of the given size
-func New(size uint64, memory uint64) *Repository {
+func New(size, memory uint64) *Repository {
 	c := &Repository{
 		maxsize:              size,
 		fragmentPositionList: list.New(),
