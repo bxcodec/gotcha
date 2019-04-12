@@ -9,7 +9,6 @@ import (
 	"github.com/bxcodec/gotcha/lfu/repository"
 )
 
-/*
 func TestSet(t *testing.T) {
 	repo := repository.NewRepository()
 	doc := &cache.Document{
@@ -60,7 +59,6 @@ func TestSetWithMultipleKeyExists(t *testing.T) {
 		}
 	}
 }
-*/
 
 func TestGet(t *testing.T) {
 	repo := repository.NewRepository()
@@ -126,5 +124,29 @@ func TestGet(t *testing.T) {
 	}
 
 	fmt.Println("LFU: ", lfu.Value)
+}
 
+func BenchmarkSetItem(b *testing.B) {
+	repo := repository.NewRepository()
+	preDoc := &cache.Document{
+		Key:        "key-1",
+		Value:      "Hello World",
+		StoredTime: time.Now(),
+	}
+	err := repo.Set(preDoc)
+	if err != nil {
+		b.Errorf("expected %v, actual %v", nil, err)
+	}
+	doc := &cache.Document{
+		Key:        "key-2",
+		Value:      "Hello World",
+		StoredTime: time.Now(),
+	}
+	for i := 0; i < b.N; i++ {
+
+		err := repo.Set(doc)
+		if err != nil {
+			b.Errorf("expected %v, actual %v", nil, err)
+		}
+	}
 }

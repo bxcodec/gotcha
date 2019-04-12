@@ -51,9 +51,9 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 		freqVal.frequency++
 		freq.Value = freqVal
 		r.frequencyList.MoveAfter(freq, freq)
-		fmt.Println("++++++++")
-		r.printList()
-		fmt.Println("++++++++")
+		// fmt.Println("++++++++")
+		// r.printList()
+		// fmt.Println("++++++++")
 		return
 	}
 
@@ -67,9 +67,9 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 	// TODO: (bxcodec)
 	// Check Expiry Time
 
-	fmt.Println("++++++++")
-	r.printList()
-	fmt.Println("++++++++")
+	// fmt.Println("++++++++")
+	// r.printList()
+	// fmt.Println("++++++++")
 	return
 }
 
@@ -117,8 +117,8 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 
 	// fmt.Printf("By Key: %+v\n", r.byKey)
 	// fmt.Println("Len", r.frequencyList.Len())
-	r.printList()
-	fmt.Println("=======")
+	// r.printList()
+	// fmt.Println("=======")
 	return
 }
 
