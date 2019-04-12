@@ -23,7 +23,7 @@ See documentation in [Godoc](https://godoc.org/github.com/bxcodec/gotcha)
 #### Download
 
 ```shell
-go get -u github.com/bxcodec/faker/v3
+go get -u github.com/bxcodec/gotcha
 ```
 ## Example
 
