@@ -46,7 +46,7 @@ func (c *Cache) Set(key string, value interface{}) (err error) {
 	document := &cache.Document{
 		Key:        key,
 		Value:      value,
-		StoredTime: time.Now(),
+		StoredTime: time.Now().Unix(),
 	}
 	c.Lock()
 	c.repo.Set(document)
