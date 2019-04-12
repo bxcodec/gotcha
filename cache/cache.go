@@ -25,7 +25,7 @@ const (
 type Document struct {
 	Key        string
 	Value      interface{}
-	StoredTime time.Time
+	StoredTime int64 //timestamp
 }
 
 // Option ...

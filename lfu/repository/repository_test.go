@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -9,17 +8,18 @@ import (
 	"github.com/bxcodec/gotcha/lfu/repository"
 )
 
+/*
 func TestSet(t *testing.T) {
-	repo := repository.NewRepository()
+	repo := repository.NewRepository(5, 100)
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
-		StoredTime: time.Now(),
+		StoredTime: time.Now().Add(time.Second * -1).Unix(),
 	}
 
 	err := repo.Set(doc)
 	if err != nil {
-		t.Errorf("expected %v, actual %v", nil, err)
+		t.Fatalf("expected %v, actual %v", nil, err)
 	}
 }
 
@@ -28,125 +28,194 @@ func TestSetWithMultipleKeyExists(t *testing.T) {
 		&cache.Document{
 			Key:        "key-1",
 			Value:      "Hello World 1",
-			StoredTime: time.Now(),
+			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
 		&cache.Document{
 			Key:        "key-2",
 			Value:      "Hello World 2",
-			StoredTime: time.Now(),
+			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
 		&cache.Document{
 			Key:        "key-1",
 			Value:      "Hello World 1 Modified",
-			StoredTime: time.Now(),
+			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
 		&cache.Document{
 			Key:        "key-3",
 			Value:      "Hello World 3 Modified",
-			StoredTime: time.Now(),
+			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
 		&cache.Document{
 			Key:        "key-1",
 			Value:      "Hello World 1 Modified Twice",
-			StoredTime: time.Now(),
+			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
 	}
-	repo := repository.NewRepository()
+	repo := repository.NewRepository(5, 100)
 	for _, doc := range arrDoc {
 		err := repo.Set(doc)
 		if err != nil {
-			t.Errorf("expected %v, actual %v", nil, err)
+			t.Fatalf("expected %v, actual %v", nil, err)
 		}
 	}
 }
 
-func TestGet(t *testing.T) {
-	repo := repository.NewRepository()
-	arrDoc := []*cache.Document{
-		&cache.Document{
-			Key:        "key-1",
-			Value:      "Hello World 1",
-			StoredTime: time.Now(),
-		},
-		&cache.Document{
-			Key:        "key-2",
-			Value:      "Hello World 2",
-			StoredTime: time.Now(),
-		},
-		&cache.Document{
-			Key:        "key-1",
-			Value:      "Hello World 1 Modified",
-			StoredTime: time.Now(),
-		},
-		&cache.Document{
-			Key:        "key-3",
-			Value:      "Hello World 3 Modified",
-			StoredTime: time.Now(),
-		},
-		&cache.Document{
-			Key:        "key-1",
-			Value:      "Hello World 1 Modified Twice",
-			StoredTime: time.Now(),
-		},
+func TestGetOne(t *testing.T) {
+	repo := repository.NewRepository(5, 100)
+	doc := &cache.Document{
+		Key:        "key-2",
+		Value:      "Hello World",
+		StoredTime: time.Now().Add(time.Second * -1).Unix(),
 	}
 
-	for _, doc := range arrDoc {
-		err := repo.Set(doc)
-		if err != nil {
-			t.Errorf("expected %v, actual %v", nil, err)
-		}
+	err := repo.Set(doc)
+	if err != nil {
+		t.Fatalf("expected %v, actual %v", nil, err)
 	}
 
 	res, err := repo.Get("key-2")
 	if err != nil {
-		t.Errorf("expected %v, actual %v", nil, err)
+		t.Fatalf("expected %v, actual %v", nil, err)
 	}
 
-	fmt.Println("Res: ", res.Value)
+	if res.Value != doc.Value {
+		t.Fatalf("expected %v, actual %v", doc.Value, res.Value)
+	}
+}
+*/
 
-	res2, err := repo.Get("key-2")
+func TestGetWithMultipleSet(t *testing.T) {
+	repo := repository.NewRepository(3, 100)
+	arrDoc := []*cache.Document{
+		&cache.Document{
+			Key:        "key-1",
+			Value:      "A",
+			StoredTime: time.Now().Add(time.Minute * -1).Unix(),
+		},
+		&cache.Document{
+			Key:        "key-1",
+			Value:      "A'",
+			StoredTime: time.Now().Add(time.Second * -40).Unix(),
+		},
+		&cache.Document{
+			Key:        "key-3",
+			Value:      "C",
+			StoredTime: time.Now().Add(time.Second * -30).Unix(),
+		},
+		&cache.Document{
+			Key:        "key-1",
+			Value:      "A''",
+			StoredTime: time.Now().Add(time.Second * -10).Unix(),
+		},
+		&cache.Document{
+			Key:        "key-4",
+			Value:      "D",
+			StoredTime: time.Now().Add(time.Second * -5).Unix(),
+		},
+	}
+
+	for _, doc := range arrDoc {
+		err := repo.Set(doc)
+		if err != nil {
+			t.Fatalf("expected %v, actual %v", nil, err)
+		}
+	}
+
+	doc2 := &cache.Document{
+		Key:        "key-2",
+		Value:      "B",
+		StoredTime: time.Now().Add(time.Second * -2).Unix(),
+	}
+
+	err := repo.Set(doc2)
 	if err != nil {
-		t.Errorf("expected %v, actual %v", nil, err)
+		t.Fatalf("expected %v, actual %v", nil, err)
 	}
 
-	fmt.Println("Res: ", res2.Value)
+	res, err := repo.Get("key-2")
+	if err != nil {
+		t.Fatalf("expected %v, actual %v", nil, err)
+	}
+
+	if res.Value != doc2.Value {
+		t.Fatalf("expected %v, actual %v", doc2.Value, res.Value)
+	}
+
+	// _, err = repo.Get("key-3")
+	// if err == nil {
+	// 	t.Fatalf("expected %v, actual %v", nil, err)
+	// }
 
 	res3, err := repo.Get("key-3")
 	if err != nil {
-		t.Errorf("expected %v, actual %v", nil, err)
+		t.Fatalf("expected %v, actual %v", nil, err)
 	}
 
-	fmt.Println("Res3: ", res3.Value)
+	if res3.Value != arrDoc[2].Value {
+		t.Fatalf("expected %v, actual %v", arrDoc[2].Value, res3.Value)
+	}
 
-	lfu, err := repo.GetLFU()
+	res2, err := repo.Get("key-2")
 	if err != nil {
-		t.Errorf("expected %v, actual %v", nil, err)
+		t.Fatalf("expected %v, actual %v", nil, err)
 	}
 
-	fmt.Println("LFU: ", lfu.Value)
+	if res2.Value != doc2.Value {
+		t.Fatalf("expected %v, actual %v", doc2.Value, res2.Value)
+	}
+
+	docLast := &cache.Document{
+		Key:        "key-5",
+		Value:      "E",
+		StoredTime: time.Now().Unix(),
+	}
+
+	err = repo.Set(docLast)
+	if err != nil {
+		t.Fatalf("expected %v, actual %v", nil, err)
+	}
+
+	res5, err := repo.Get("key-5")
+	if err != nil {
+		t.Fatalf("expected %v, actual %v", nil, err)
+	}
+
+	if res5.Value != docLast.Value {
+		t.Fatalf("expected %v, actual %v", docLast.Value, res5.Value)
+	}
+
+	// lfu, err := repo.GetLFU()
+	// if err != nil {
+	// 	t.Fatalf("expected %v, actual %v", nil, err)
+	// }
+
+	// fmt.Println("LFU: ", lfu.Value)
 }
 
+/*
 func BenchmarkSetItem(b *testing.B) {
-	repo := repository.NewRepository()
+	repo := repository.NewRepository(5,100)
 	preDoc := &cache.Document{
 		Key:        "key-1",
 		Value:      "Hello World",
-		StoredTime: time.Now(),
+		StoredTime: time.Now().Add(time.Second * -1).Unix(),
 	}
 	err := repo.Set(preDoc)
 	if err != nil {
-		b.Errorf("expected %v, actual %v", nil, err)
+		b.Fatalf("expected %v, actual %v", nil, err)
 	}
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
-		StoredTime: time.Now(),
+		StoredTime: time.Now().Add(time.Second * -1).Unix(),
 	}
 	for i := 0; i < b.N; i++ {
 
+		doc.Key = fmt.Sprintf("key-%d", i)
 		err := repo.Set(doc)
 		if err != nil {
-			b.Errorf("expected %v, actual %v", nil, err)
+			b.Fatalf("expected %v, actual %v", nil, err)
 		}
 	}
 }
+*/

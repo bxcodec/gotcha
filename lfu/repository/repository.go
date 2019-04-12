@@ -3,135 +3,171 @@ package repository
 import (
 	"container/list"
 	"fmt"
+	"reflect"
+	"time"
 
 	"github.com/bxcodec/gotcha/cache"
 )
 
 // Repository ...
 type Repository struct {
-	frequencyList *list.List
-	byKey         map[string]*cacheItem
-	freqHead      *list.Element
+	frequencyList *list.List // will store list of frequencyItem
+	byKey         map[string]*lfuItem
+	maxSize       uint64
+	maxMemory     uint64
 }
 
-type cacheItem struct {
-	data   *cache.Document
-	parent *list.Element
+type lfuItem struct {
+	freqParent *list.Element
+	data       *cache.Document
 }
 
 type frequencyItem struct {
-	key       string
 	frequency uint64
+	// TODO: (bxcodec) Change to Set type if possible
+	// In the paper of Prof. Ketan Shah this items using SET
+	// since SET is not available in Golang, I just use Map here
+	items map[*lfuItem]bool
 }
 
-func NewRepository() (repo *Repository) {
+func NewRepository(maxSize, maxMemory uint64) (repo *Repository) {
 	repo = &Repository{
 		frequencyList: list.New(),
-		byKey:         make(map[string]*cacheItem),
-		freqHead: &list.Element{
-			Value: &frequencyItem{},
-		},
+		byKey:         make(map[string]*lfuItem),
+		maxMemory:     maxMemory,
+		maxSize:       maxSize,
 	}
 	return
 }
 
-// Get ...
 func (r *Repository) Get(key string) (res *cache.Document, err error) {
-	elem, ok := r.byKey[key]
-	if elem == nil || !ok {
+	tmp := r.byKey[key]
+	if tmp == nil {
 		err = cache.ErrMissed
 		return
 	}
-	res = elem.data
-
-	freq := elem.parent
+	res = tmp.data
+	freq := tmp.freqParent
 	nextFreq := freq.Next()
-	freqVal := (freq.Value.(*frequencyItem))
 	if nextFreq == nil {
-		freqVal.frequency++
-		freq.Value = freqVal
-		r.frequencyList.MoveAfter(freq, freq)
-		// fmt.Println("++++++++")
-		// r.printList()
-		// fmt.Println("++++++++")
-		return
+		nextFreq = freq
 	}
 
-	nextFreqVal := (nextFreq.Value.(*frequencyItem))
-	if nextFreq == r.freqHead || freqVal.frequency != (nextFreqVal.frequency+1) {
-		freqVal.frequency = (nextFreqVal.frequency + 1)
-		freq.Value = freqVal
-		r.frequencyList.MoveAfter(freq, nextFreq)
+	freqVal := freq.Value.(*frequencyItem)
+	nextFreqVal := nextFreq.Value.(*frequencyItem)
+	headFreq := r.frequencyList.Front()
+	if nextFreq == headFreq || nextFreqVal.frequency != (freqVal.frequency+1) {
+		newNodeFreq := &frequencyItem{
+			frequency: freqVal.frequency + 1,
+		}
+		nextFreq = r.frequencyList.InsertAfter(newNodeFreq, freq)
+	}
+
+	nextFreqVal = nextFreq.Value.(*frequencyItem)
+	if len(nextFreqVal.items) == 0 {
+		nextFreqVal.items = make(map[*lfuItem]bool)
+	}
+	nextFreqVal.items[tmp] = true
+	tmp.freqParent = nextFreq
+	delete(freqVal.items, tmp)
+	if len(freqVal.items) == 0 {
+		r.frequencyList.Remove(freq)
 	}
 
 	// TODO: (bxcodec)
-	// Check Expiry Time
+	//  Check Expiry and Remove expired item
+	return
+}
 
-	// fmt.Println("++++++++")
-	// r.printList()
-	// fmt.Println("++++++++")
+func (r *Repository) Set(doc *cache.Document) (err error) {
+	if _, ok := r.byKey[doc.Key]; ok {
+		// TODO: (bxcodec)
+		// Re-insert the document
+		return
+	}
+
+	freq := r.frequencyList.Front() // Front will always be the least frequently used
+	freqVal := &frequencyItem{}
+
+	if freq == nil {
+		newNodeFreq := &frequencyItem{
+			frequency: 1,
+		}
+		freq = r.frequencyList.PushFront(newNodeFreq)
+		freqVal = freq.Value.(*frequencyItem)
+		item := &lfuItem{
+			freqParent: freq,
+			data:       doc,
+		}
+
+		freqVal.items = map[*lfuItem]bool{
+			item: true,
+		}
+		r.byKey[doc.Key] = item
+		return
+	}
+
+	freqVal = freq.Value.(*frequencyItem)
+	if freqVal.frequency != 1 {
+		newNodeFreq := &frequencyItem{
+			frequency: 1,
+			items:     make(map[*lfuItem]bool),
+		}
+
+		freq = r.frequencyList.InsertAfter(newNodeFreq, freq)
+		fmt.Println("Kye", doc.Key)
+	}
+
+	freqVal = freq.Value.(*frequencyItem)
+	item := &lfuItem{
+		freqParent: freq,
+		data:       doc,
+	}
+
+	freqVal.items[item] = true
+	r.byKey[doc.Key] = item
+
+	// Remove oldest
+	if uint64(len(r.byKey)) > r.maxSize {
+		r.removeLfuOldest()
+	}
 	return
 }
 
 func (r *Repository) printList() {
-	for elem := r.frequencyList.Back(); elem != nil; elem = elem.Prev() {
+	for elem := r.frequencyList.Front(); elem != nil; elem = elem.Next() {
 		first := elem.Value.(*frequencyItem)
 		fmt.Printf("Elem Freq: %+v\n", first.frequency)
-		fmt.Printf("Elem Doc: %+v\n", first.key)
-	}
-}
-
-// Set ...
-func (r *Repository) Set(doc *cache.Document) (err error) {
-	// Check for existing item
-	if elem, ok := r.byKey[doc.Key]; ok {
-		elem.data = doc
-		return nil
-	}
-
-	freq := r.freqHead.Next()
-	freqVal := &frequencyItem{}
-	if freq == nil {
-		freqVal = &frequencyItem{
-			// doc:       doc,
-			key:       doc.Key,
-			frequency: 1,
+		for item, _ := range first.items {
+			fmt.Printf("\tElem Doc: %+v\n", item)
 		}
-		freq = r.frequencyList.PushFront(freqVal)
 	}
-
-	freqVal, _ = freq.Value.(*frequencyItem)
-	if freqVal.frequency != 1 {
-		freqVal.frequency = 1
-		r.frequencyList.MoveAfter(freq, r.freqHead)
-	}
-
-	freqVal.key = doc.Key
-	cacheItem := &cacheItem{
-		data:   doc,
-		parent: freq,
-	}
-	r.byKey[doc.Key] = cacheItem
-	// elem := r.fragmentPositionList.PushFront(doc)
-	// r.items[doc.Key] = elem
-
-	// fmt.Printf("By Key: %+v\n", r.byKey)
-	// fmt.Println("Len", r.frequencyList.Len())
-	// r.printList()
-	// fmt.Println("=======")
-	return
 }
 
-// GetLFU ...
-func (r *Repository) GetLFU() (res *cache.Document, err error) {
-	elem := r.frequencyList.Front()
-	freq := elem.Value.(*frequencyItem)
+func (r *Repository) removeLfuOldest() (oldestItem *lfuItem) {
+	lfuList := r.frequencyList.Front()
+	freqItem := lfuList.Value.(*frequencyItem)
 
-	cacheItem, ok := r.byKey[freq.key]
-	if !ok {
-		err = cache.ErrMissed
-		return
+	minStoreTime := time.Now().Unix()
+	// Search for the oldest one with store time
+	for item := range freqItem.items {
+
+		if item.data.StoredTime < minStoreTime {
+			minStoreTime = item.data.StoredTime
+			oldestItem = item
+		}
 	}
-	res = cacheItem.data
+
+	if oldestItem == nil && len(freqItem.items) > 0 {
+		//  Get randomly
+		oldestItem = reflect.ValueOf(freqItem.items).MapKeys()[0].Interface().(*lfuItem)
+	}
+
+	// Remove from Cache
+	delete(freqItem.items, oldestItem)
+	delete(r.byKey, oldestItem.data.Key)
+	if len(freqItem.items) == 0 {
+		r.frequencyList.Remove(lfuList)
+	}
 	return
 }
