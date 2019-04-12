@@ -14,7 +14,7 @@ func TestSet(t *testing.T) {
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
-		StoredTime: time.Now(),
+		StoredTime: time.Now().Unix(),
 	}
 	err := repo.Set(doc)
 	if err != nil {
@@ -39,7 +39,7 @@ func TestSetMultiple(t *testing.T) {
 		doc := &cache.Document{
 			Key:        fmt.Sprintf("key:%d", i),
 			Value:      i,
-			StoredTime: time.Now(),
+			StoredTime: time.Now().Unix(),
 		}
 		err := repo.Set(doc)
 		if err != nil {
@@ -77,27 +77,27 @@ func TestSetWithExistingKey(t *testing.T) {
 		&cache.Document{
 			Key:        "key-1",
 			Value:      "Hello World 1",
-			StoredTime: time.Now(),
+			StoredTime: time.Now().Unix(),
 		},
 		&cache.Document{
 			Key:        "key-2",
 			Value:      "Hello World 2",
-			StoredTime: time.Now(),
+			StoredTime: time.Now().Unix(),
 		},
 		&cache.Document{
 			Key:        "key-1",
 			Value:      "Hello World 1 Modified",
-			StoredTime: time.Now(),
+			StoredTime: time.Now().Unix(),
 		},
 		&cache.Document{
 			Key:        "key-3",
 			Value:      "Hello World 3 Modified",
-			StoredTime: time.Now(),
+			StoredTime: time.Now().Unix(),
 		},
 		&cache.Document{
 			Key:        "key-1",
 			Value:      "Hello World 1 Modified Twice",
-			StoredTime: time.Now(),
+			StoredTime: time.Now().Unix(),
 		},
 	}
 
@@ -126,7 +126,7 @@ func TestGet(t *testing.T) {
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
-		StoredTime: time.Now(),
+		StoredTime: time.Now().Unix(),
 	}
 	err := repo.Set(doc)
 	if err != nil {

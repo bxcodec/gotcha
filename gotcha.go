@@ -2,6 +2,7 @@ package gotcha
 
 import (
 	"github.com/bxcodec/gotcha/cache"
+	"github.com/bxcodec/gotcha/lfu"
 	"github.com/bxcodec/gotcha/lru"
 )
 
@@ -29,9 +30,8 @@ func New(options ...*cache.Option) (c cache.Interactor) {
 	case cache.LRUAlgorithm:
 		c = lru.NewCache(*option)
 	case cache.LFUAlgorithm:
-		// TODO: (bxcodec)
+		c = lfu.NewCache(*option)
 	}
-
 	return
 }
 
