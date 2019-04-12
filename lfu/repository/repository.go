@@ -178,24 +178,34 @@ func (r *Repository) removeLfuOldest() (oldestItem *lfuItem) {
 
 // Clear ...
 func (r *Repository) Clear() (err error) {
-	panic("TODO")
+	for k := range r.byKey {
+		delete(r.byKey, k)
+	}
+	r.frequencyList.Init()
 	return
 }
 
 // Contains ...
 func (r *Repository) Contains(key string) (ok bool) {
-	panic("TODO")
+	_, ok = r.byKey[key]
 	return
 }
 
 // Delete ...
 func (r *Repository) Delete(key string) (ok bool, err error) {
-	panic("TODO")
+	lfuItem, ok := r.byKey[key]
+	if !ok {
+		return
+	}
+	r.frequencyList.Remove(lfuItem.freqParent)
+	delete(r.byKey, key)
 	return
 }
 
 // Keys ...
 func (r *Repository) Keys() (keys []string, err error) {
-	panic("TODO")
+	for k := range r.byKey {
+		keys = append(keys, k)
+	}
 	return
 }
