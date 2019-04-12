@@ -85,7 +85,7 @@ func TestGetOne(t *testing.T) {
 */
 
 func TestGetWithMultipleSet(t *testing.T) {
-	repo := repository.NewRepository(3, 100)
+	repo := repository.NewRepository(4, 100)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -183,13 +183,41 @@ func TestGetWithMultipleSet(t *testing.T) {
 	if res5.Value != docLast.Value {
 		t.Fatalf("expected %v, actual %v", docLast.Value, res5.Value)
 	}
+}
 
-	// lfu, err := repo.GetLFU()
-	// if err != nil {
-	// 	t.Fatalf("expected %v, actual %v", nil, err)
-	// }
+func TestSetWithFrequency1IsNotExists(t *testing.T) {
+	repo := repository.NewRepository(5, 100)
+	doc := &cache.Document{
+		Key:        "key-2",
+		Value:      "Hello World",
+		StoredTime: time.Now().Add(time.Second * -1).Unix(),
+	}
 
-	// fmt.Println("LFU: ", lfu.Value)
+	err := repo.Set(doc)
+	if err != nil {
+		t.Fatalf("expected %v, actual %v", nil, err)
+	}
+
+	res, err := repo.Get("key-2")
+	if err != nil {
+		t.Fatalf("expected %v, actual %v", nil, err)
+	}
+
+	if res.Value != doc.Value {
+		t.Fatalf("expected %v, actual %v", doc.Value, res.Value)
+	}
+
+	docLast := &cache.Document{
+		Key:        "key-5",
+		Value:      "E",
+		StoredTime: time.Now().Unix(),
+	}
+
+	err = repo.Set(docLast)
+	if err != nil {
+		t.Fatalf("expected %v, actual %v", nil, err)
+	}
+
 }
 
 /*

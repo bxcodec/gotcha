@@ -113,9 +113,7 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 			frequency: 1,
 			items:     make(map[*lfuItem]bool),
 		}
-
-		freq = r.frequencyList.InsertAfter(newNodeFreq, freq)
-		fmt.Println("Kye", doc.Key)
+		freq = r.frequencyList.PushFront(newNodeFreq)
 	}
 
 	freqVal = freq.Value.(*frequencyItem)
@@ -131,6 +129,7 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 	if uint64(len(r.byKey)) > r.maxSize {
 		r.removeLfuOldest()
 	}
+
 	return
 }
 
