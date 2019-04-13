@@ -77,6 +77,68 @@ func main() {
 }
 ```
 
+### With Custom Cache ALgorithm
+
+#### LRU
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/bxcodec/gotcha"
+	"github.com/bxcodec/gotcha/cache"
+)
+
+func main() {
+	cache := gotcha.New(
+		gotcha.NewOption().SetAlgorithm(cache.LRUAlgorithm).
+			SetExpiryTime(time.Minute * 10).SetMaxSizeItem(100),
+	)
+	err := cache.Set("Kue", "Nama")
+	if err != nil {
+		log.Fatal(err)
+	}
+	val, err := cache.Get("Kue")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(val)
+}
+```
+
+#### LFU
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/bxcodec/gotcha"
+	"github.com/bxcodec/gotcha/cache"
+)
+
+func main() {
+	cache := gotcha.New(
+		gotcha.NewOption().SetAlgorithm(cache.LFUAlgorithm).
+			SetExpiryTime(time.Minute * 10).SetMaxSizeItem(100),
+	)
+	err := cache.Set("Kue", "Nama")
+	if err != nil {
+		log.Fatal(err)
+	}
+	val, err := cache.Get("Kue")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(val)
+}
+```
+
 
 ## Contribution
 - You can submit an issue or create a Pull Request (PR)
