@@ -19,7 +19,7 @@ type Repository interface {
 }
 
 // NewCache return the implementations of cache with LRU algorithm
-func NewCache(option cache.Option) cache.Interactor {
+func NewCache(option cache.Option) cache.Cache {
 	repo := repository.New(option.MaxSizeItem, option.MaxMemory, option.ExpiryTime)
 	return &Cache{
 		Option: option,
