@@ -27,6 +27,8 @@ go get -u github.com/bxcodec/gotcha
 ```
 ## Example
 
+
+### With Cache Client
 ```go
 package main
 
@@ -39,17 +41,42 @@ import (
 
 func main() {
 	cache := gotcha.New()
-	err := cache.Set("Kue", "Nama")
+	err := cache.Set("name", "John Snow")
 	if err != nil {
 		log.Fatal(err)
 	}
-	val, err := cache.Get("Kue")
+	val, err := cache.Get("name")
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(val)
 }
 ```
+
+### Without Cache Client
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/bxcodec/gotcha"
+)
+
+func main() {
+	err := gotcha.Set("name", "John Snow")
+	if err != nil {
+		log.Fatal(err)
+	}
+	val, err := gotcha.Get("name")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(val)
+}
+```
+
 
 ## Contribution
 - You can submit an issue or create a Pull Request (PR)
