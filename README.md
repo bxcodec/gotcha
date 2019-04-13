@@ -28,13 +28,27 @@ go get -u github.com/bxcodec/gotcha
 ## Example
 
 ```go
-cache:=gotcha.New()
-cache.Set("key", 20)
-res,err:=cache.Get("key")
-if err != nil {
-    log.Fatal(err)
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/bxcodec/gotcha"
+)
+
+func main() {
+	cache := gotcha.New()
+	err := cache.Set("Kue", "Nama")
+	if err != nil {
+		log.Fatal(err)
+	}
+	val, err := cache.Get("Kue")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(val)
 }
-fmt.Println(res)
 ```
 
 ## Contribution
