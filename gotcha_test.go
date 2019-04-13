@@ -7,7 +7,6 @@ import (
 )
 
 func TestGotcha(t *testing.T) {
-
 	t.Run("set", func(t *testing.T) {
 		err := gotcha.Set("name", "John Snow")
 		if err != nil {
@@ -79,7 +78,6 @@ func TestGotcha(t *testing.T) {
 	})
 
 	t.Run("clear-cache", func(t *testing.T) {
-
 		// Ensure the cache is still contains item
 		keys, err := gotcha.GetKeys()
 		if err != nil {
