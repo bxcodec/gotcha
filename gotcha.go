@@ -6,8 +6,13 @@ import (
 	"github.com/bxcodec/gotcha/lru"
 )
 
-// New ...
-func New(options ...*cache.Option) (c cache.Interactor) {
+var (
+	// DefaultCache use for default cache client
+	DefaultCache = New()
+)
+
+// New will create a new cache client. If the options not set, the cache will use the default options
+func New(options ...*cache.Option) (c cache.Cache) {
 	option := mergeOptions(options...)
 	if option.MaxMemory == 0 { // Unlimited
 		// TODO: (bxcodec)
@@ -57,4 +62,29 @@ func mergeOptions(options ...*cache.Option) (opts *cache.Option) {
 		}
 	}
 	return
+}
+
+// Set will set an item to cache using default option
+func Set(key string, value interface{}) (err error) {
+	return DefaultCache.Set(key, value)
+}
+
+// Get will get an item from cache using default option
+func Get(key string) (value interface{}, err error) {
+	return DefaultCache.Get(key)
+}
+
+// Delete will delete an item from the cache using default option
+func Delete(key string) (err error) {
+	return DefaultCache.Delete(key)
+}
+
+// GetKeys will get all keys from the cache using default option
+func GetKeys() (keys []string, err error) {
+	return DefaultCache.GetKeys()
+}
+
+// ClearCache will Clear the cache using default option
+func ClearCache() (err error) {
+	return DefaultCache.ClearCache()
 }

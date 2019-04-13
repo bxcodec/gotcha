@@ -19,6 +19,8 @@ const (
 	DefaultSize = 100
 	// DefaultExpiryTime ...
 	DefaultExpiryTime = time.Second * 10
+	// DefaultAlgorithm ...
+	DefaultAlgorithm = LRUAlgorithm
 )
 
 // Document ...
@@ -60,8 +62,8 @@ func (o *Option) SetMaxMemory(memory uint64) *Option {
 	return o
 }
 
-// Interactor ...
-type Interactor interface {
+// Cache represent the public API that will available used by user
+type Cache interface {
 	Set(key string, value interface{}) error
 	Get(key string) (val interface{}, err error)
 	Delete(key string) (err error)
