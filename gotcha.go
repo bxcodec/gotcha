@@ -35,6 +35,11 @@ func New(options ...*cache.Option) (c cache.Interactor) {
 	return
 }
 
+// NewOption return an empty option
+func NewOption() (op *cache.Option) {
+	return
+}
+
 func mergeOptions(options ...*cache.Option) (opts *cache.Option) {
 	opts = new(cache.Option)
 	for _, op := range options {
