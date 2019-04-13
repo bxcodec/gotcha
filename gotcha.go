@@ -42,7 +42,7 @@ func New(options ...*cache.Option) (c cache.Cache) {
 
 // NewOption return an empty option
 func NewOption() (op *cache.Option) {
-	return
+	return &cache.Option{}
 }
 
 func mergeOptions(options ...*cache.Option) (opts *cache.Option) {
