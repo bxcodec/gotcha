@@ -395,7 +395,6 @@ func TestClearCache(t *testing.T) {
 }
 
 func TestGetExpired(t *testing.T) {
-
 	repo := repository.New(4, 100, time.Second*15)
 	arrDoc := []*cache.Document{
 		&cache.Document{
@@ -439,12 +438,10 @@ func TestGetExpired(t *testing.T) {
 		t.Fatalf("expected %v, actual %v", nil, item)
 	}
 
-	// Since the item is expired
-
+	// Ensure the current item in cache is 1 (since the expired is already deleted)
 	if repo.Len() != 1 {
 		t.Fatalf("expected %v, actual %v", 1, repo.Len())
 	}
-
 }
 
 func BenchmarkSetItem(b *testing.B) {
