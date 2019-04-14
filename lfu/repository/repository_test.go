@@ -84,7 +84,7 @@ func TestGetOne(t *testing.T) {
 }
 
 func TestGetWithMultipleSet(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 100, time.Minute*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -99,7 +99,7 @@ func TestGetWithMultipleSet(t *testing.T) {
 		&cache.Document{
 			Key:        "key-3",
 			Value:      "C",
-			StoredTime: time.Now().Add(time.Second * -30).Unix(),
+			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
 		&cache.Document{
 			Key:        "key-1",
@@ -140,11 +140,6 @@ func TestGetWithMultipleSet(t *testing.T) {
 		t.Fatalf("expected %v, actual %v", doc2.Value, res.Value)
 	}
 
-	// _, err = repo.Get("key-3")
-	// if err == nil {
-	// 	t.Fatalf("expected %v, actual %v", nil, err)
-	// }
-
 	res3, err := repo.Get("key-3")
 	if err != nil {
 		t.Fatalf("expected %v, actual %v", nil, err)
@@ -181,6 +176,116 @@ func TestGetWithMultipleSet(t *testing.T) {
 
 	if res5.Value != docLast.Value {
 		t.Fatalf("expected %v, actual %v", docLast.Value, res5.Value)
+	}
+}
+
+func TestGetExpiredItem(t *testing.T) {
+	repo := repository.New(4, 100, time.Second*5)
+	arrDoc := []*cache.Document{
+		&cache.Document{
+			Key:        "key-1",
+			Value:      "A",
+			StoredTime: time.Now().Add(time.Minute * -1).Unix(),
+		},
+		&cache.Document{
+			Key:        "key-3",
+			Value:      "C",
+			StoredTime: time.Now().Add(time.Second * -1).Unix(),
+		},
+		&cache.Document{
+			Key:        "key-4",
+			Value:      "D",
+			StoredTime: time.Now().Add(time.Second * -3).Unix(),
+		},
+	}
+
+	for _, doc := range arrDoc {
+		err := repo.Set(doc)
+		if err != nil {
+			t.Fatalf("expected %v, actual %v", nil, err)
+		}
+	}
+
+	// Ensure the current length == 3
+	if repo.Len() != 3 {
+		t.Fatalf("expected %v, actual %v", 3, repo.Len())
+	}
+
+	// Get the expired
+	res, err := repo.Get("key-1")
+	if err == nil {
+		t.Fatalf("expected %v, actual %v", "error", err)
+	}
+	if res != nil {
+		t.Fatalf("expected %v, actual %v", nil, res)
+	}
+
+	// Get the non expired
+	res, err = repo.Get("key-4")
+	if err != nil {
+		t.Fatalf("expected %v, actual %v", nil, err)
+	}
+
+	if res.Value != arrDoc[2].Value {
+		t.Fatalf("expected %v, actual %v", arrDoc[2].Value, res.Value)
+	}
+
+	// Get total length of exist item should be == 2
+	if repo.Len() != 2 {
+		t.Fatalf("expected %v, actual %v", 2, repo.Len())
+	}
+}
+
+func TestGetExpiredButSingleSetItemInList(t *testing.T) {
+	repo := repository.New(4, 100, time.Second*5)
+	arrDoc := []*cache.Document{
+		&cache.Document{
+			Key:        "key-1",
+			Value:      "A",
+			StoredTime: time.Now().Add(time.Minute * -1).Unix(),
+		},
+		&cache.Document{
+			Key:        "key-4",
+			Value:      "D",
+			StoredTime: time.Now().Add(time.Second * -3).Unix(),
+		},
+	}
+
+	for _, doc := range arrDoc {
+		err := repo.Set(doc)
+		if err != nil {
+			t.Fatalf("expected %v, actual %v", nil, err)
+		}
+	}
+
+	// Get the non expired first to increase the frequency,
+	// and let the expired alone in the set of its parent list
+	res, err := repo.Get("key-4")
+	if err != nil {
+		t.Fatalf("expected %v, actual %v", nil, err)
+	}
+
+	if res.Value != arrDoc[1].Value {
+		t.Fatalf("expected %v, actual %v", arrDoc[1].Value, res.Value)
+	}
+
+	// Ensure the current length == 2
+	if repo.Len() != 2 {
+		t.Fatalf("expected %v, actual %v", 2, repo.Len())
+	}
+
+	// Get the expired
+	res, err = repo.Get("key-1")
+	if err == nil {
+		t.Fatalf("expected %v, actual %v", "error", err)
+	}
+	if res != nil {
+		t.Fatalf("expected %v, actual %v", nil, res)
+	}
+
+	// Get total length of exist item should be == 2
+	if repo.Len() != 1 {
+		t.Fatalf("expected %v, actual %v", 2, repo.Len())
 	}
 }
 

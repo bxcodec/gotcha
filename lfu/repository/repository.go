@@ -51,6 +51,14 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 		return
 	}
 	res = tmp.data
+
+	//  Check Expiry and Remove the expired item
+	storedTime := time.Unix(res.StoredTime, 0)
+	if time.Since(storedTime) > r.expiryTreshold {
+		r.Delete(key)
+		return nil, cache.ErrMissed
+	}
+
 	freq := tmp.freqParent
 	nextFreq := freq.Next()
 	if nextFreq == nil {
@@ -78,8 +86,6 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 		r.frequencyList.Remove(freq)
 	}
 
-	// TODO: (bxcodec)
-	//  Check Expiry and Remove expired item
 	return
 }
 
@@ -201,7 +207,12 @@ func (r *Repository) Delete(key string) (ok bool, err error) {
 	if !ok {
 		return
 	}
-	r.frequencyList.Remove(lfuItem.freqParent)
+
+	freqItem := lfuItem.freqParent.Value.(*frequencyItem)
+	delete(freqItem.items, lfuItem)
+	if len(freqItem.items) == 0 {
+		r.frequencyList.Remove(lfuItem.freqParent)
+	}
 	delete(r.byKey, key)
 	return
 }
