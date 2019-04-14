@@ -54,10 +54,14 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 // Get looks up a key's value from the cache.
 func (r *Repository) Get(key string) (res *cache.Document, err error) {
 	if elem, ok := r.items[key]; ok {
-		// TODO: (bxcodec)
-		// Check Expiry Time
+		res = elem.Value.(*cache.Document)
+		storedTime := time.Unix(res.StoredTime, 0)
+		if time.Since(storedTime) > r.expiryTresHold { // if expired, delete directly
+			_, err = r.Delete(key)
+			return nil, cache.ErrMissed
+		}
 		r.fragmentPositionList.MoveToFront(elem)
-		return elem.Value.(*cache.Document), nil
+		return
 	}
 	err = cache.ErrMissed
 	return
