@@ -421,8 +421,17 @@ func TestGetExpired(t *testing.T) {
 		t.Fatalf("expected %v, actual %v", 2, repo.Len())
 	}
 
+	//Get the non expired item
+	item, err := repo.Get("key-4")
+	if err != nil {
+		t.Fatalf("expected %v, actual %v", nil, err)
+	}
+	if item == nil {
+		t.Fatalf("expected %v, actual %v", "D", item.Value)
+	}
+
 	//Get the expired item
-	item, err := repo.Get("key-3")
+	item, err = repo.Get("key-3")
 	if err == nil {
 		t.Fatalf("expected %v, actual %v", "error", err)
 	}
