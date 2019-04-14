@@ -52,7 +52,7 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 	}
 	res = tmp.data
 
-	//  Check Expiry and Remove expired item
+	//  Check Expiry and Remove the expired item
 	storedTime := time.Unix(res.StoredTime, 0)
 	if time.Since(storedTime) > r.expiryTreshold {
 		r.Delete(key)
