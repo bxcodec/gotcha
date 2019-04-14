@@ -394,6 +394,56 @@ func TestClearCache(t *testing.T) {
 	}
 }
 
+func TestGetExpired(t *testing.T) {
+	repo := repository.New(4, 100, time.Second*15)
+	arrDoc := []*cache.Document{
+		&cache.Document{
+			Key:        "key-3",
+			Value:      "C",
+			StoredTime: time.Now().Add(time.Second * -30).Unix(),
+		},
+		&cache.Document{
+			Key:        "key-4",
+			Value:      "D",
+			StoredTime: time.Now().Add(time.Second * -5).Unix(),
+		},
+	}
+
+	for _, doc := range arrDoc {
+		err := repo.Set(doc)
+		if err != nil {
+			t.Fatalf("expected %v, actual %v", nil, err)
+		}
+	}
+	// Ensure total cached item is 2
+	if repo.Len() != 2 {
+		t.Fatalf("expected %v, actual %v", 2, repo.Len())
+	}
+
+	//Get the non expired item
+	item, err := repo.Get("key-4")
+	if err != nil {
+		t.Fatalf("expected %v, actual %v", nil, err)
+	}
+	if item == nil {
+		t.Fatalf("expected %v, actual %v", "D", item.Value)
+	}
+
+	//Get the expired item
+	item, err = repo.Get("key-3")
+	if err == nil {
+		t.Fatalf("expected %v, actual %v", "error", err)
+	}
+	if item != nil {
+		t.Fatalf("expected %v, actual %v", nil, item)
+	}
+
+	// Ensure the current item in cache is 1 (since the expired is already deleted)
+	if repo.Len() != 1 {
+		t.Fatalf("expected %v, actual %v", 1, repo.Len())
+	}
+}
+
 func BenchmarkSetItem(b *testing.B) {
 	repo := repository.New(10, 100, time.Minute*5)
 	preDoc := &cache.Document{
