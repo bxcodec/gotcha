@@ -16,7 +16,7 @@ import (
 )
 
 func TestSet(t *testing.T) {
-	repo := repository.New(5, 100, time.Second*5)
+	repo := repository.New(5, 10*cache.MB, time.Second*5)
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
@@ -57,7 +57,7 @@ func TestSetWithMultipleKeyExists(t *testing.T) {
 			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
 	}
-	repo := repository.New(5, 100, time.Second*5)
+	repo := repository.New(5, 10*cache.MB, time.Second*5)
 	for _, doc := range arrDoc {
 		err := repo.Set(doc)
 		if err != nil {
@@ -90,7 +90,7 @@ func TestGetOne(t *testing.T) {
 }
 
 func TestGetWithMultipleSet(t *testing.T) {
-	repo := repository.New(4, 100, time.Minute*5)
+	repo := repository.New(4, 500, time.Minute*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",

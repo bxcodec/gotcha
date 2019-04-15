@@ -14,7 +14,7 @@ var (
 // New will create a new cache client. If the options not set, the cache will use the default options
 func New(options ...*cache.Option) (c cache.Cache) {
 	option := mergeOptions(options...)
-	if option.MaxMemory == 0 { // Unlimited
+	if option.MaxMemory < cache.DefaultMaxMemory { // Unlimited
 		option.MaxMemory = cache.DefaultMaxMemory
 	}
 	if option.MaxSizeItem == 0 {

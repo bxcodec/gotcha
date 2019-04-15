@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/gob"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -143,6 +144,7 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 	// Remove oldest if the maxmemory reached
 	byteMap := encodeGob(r.byKey)
 	for uint64(len(byteMap)) > r.maxMemory {
+		fmt.Println("Size: ", len(byteMap))
 		r.removeLfuOldest()
 	}
 
@@ -166,6 +168,10 @@ func encodeGob(v interface{}) []byte {
 
 func (r *Repository) removeLfuOldest() (oldestItem *lfuItem) {
 	lfuList := r.frequencyList.Front()
+	// if r.frequencyList.Len() == 0 {
+	// 	return nil
+	// }
+	fmt.Println("Item: ", lfuList.Value)
 	freqItem := lfuList.Value.(*frequencyItem)
 
 	minStoreTime := time.Now().Unix()
