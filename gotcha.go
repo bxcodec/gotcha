@@ -15,8 +15,7 @@ var (
 func New(options ...*cache.Option) (c cache.Cache) {
 	option := mergeOptions(options...)
 	if option.MaxMemory == 0 { // Unlimited
-		// TODO: (bxcodec)
-		// option.MaxMemory = (get max memory)
+		option.MaxMemory = cache.DefaultMaxMemory
 	}
 	if option.MaxSizeItem == 0 {
 		// Use default

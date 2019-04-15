@@ -1,7 +1,13 @@
 package repository_test
 
 import (
+	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"os"
+	"runtime"
+	"runtime/pprof"
 	"testing"
 	"time"
 
@@ -522,8 +528,25 @@ func TestGetKeys(t *testing.T) {
 	}
 }
 
+// This benchmark code below also used for profiling to get the memory and CPU usage
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+
 func BenchmarkSetItem(b *testing.B) {
-	repo := repository.New(1000, 100, time.Second*40)
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		defer f.Close()
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	repo := repository.New(1000, 100, time.Minute*40)
 	preDoc := &cache.Document{
 		Key:        "key-1",
 		Value:      "Hello World",
@@ -535,15 +558,43 @@ func BenchmarkSetItem(b *testing.B) {
 	}
 	doc := &cache.Document{
 		Key:        "key-2",
-		Value:      "Hello World",
+		Value:      `Hello World`,
 		StoredTime: time.Now().Add(time.Second * -1).Unix(),
 	}
+
+	counterMiss := 0
+	counterHit := 0
+	b.N = 100
 	for i := 0; i < b.N; i++ {
 		temp := *doc
 		temp.Key = fmt.Sprintf("key-%d", i)
 		err := repo.Set(&temp)
 		if err != nil {
 			b.Fatalf("expected %v, actual %v", nil, err)
+		}
+
+		randVal := 1
+		if i != 0 {
+			randVal = rand.Intn(i)
+		}
+		res, err := repo.Get(fmt.Sprintf("key-%d", randVal))
+		if res == nil || err != nil {
+			counterMiss++
+		} else {
+			counterHit++
+		}
+	}
+	fmt.Println("Counter hit: ", counterHit)
+	fmt.Println("Counter miss: ", counterMiss)
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close()
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
 		}
 	}
 }

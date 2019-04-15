@@ -1,8 +1,9 @@
 package repository
 
 import (
+	"bytes"
 	"container/list"
-	"fmt"
+	"encoding/gob"
 	"reflect"
 	"time"
 
@@ -19,13 +20,13 @@ type Repository struct {
 }
 
 type lfuItem struct {
-	freqParent *list.Element
-	data       *cache.Document
+	FreqParent *list.Element
+	Data       *cache.Document
 }
 
 type frequencyItem struct {
-	frequency uint64
-	// TODO: (bxcodec) Change to Set data structures if possible
+	Frequency uint64
+	// TODO: (bxcodec) Change to Set Data structures if possible
 	// In the paper of Prof. Ketan Shah this items using SET
 	// since SET is not available in Golang, I just use Map here
 	items map[*lfuItem]bool
@@ -33,6 +34,7 @@ type frequencyItem struct {
 
 // New ...
 func New(maxSize, maxMemory uint64, expiryTreshold time.Duration) (repo *Repository) {
+	gob.Register(frequencyItem{}) // this is for serialization to count total documents (in bytes) saved in memory
 	repo = &Repository{
 		frequencyList:  list.New(),
 		byKey:          make(map[string]*lfuItem),
@@ -50,7 +52,7 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 		err = cache.ErrMissed
 		return
 	}
-	res = tmp.data
+	res = tmp.Data
 
 	//  Check Expiry and Remove the expired item
 	storedTime := time.Unix(res.StoredTime, 0)
@@ -59,7 +61,7 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 		return nil, cache.ErrMissed
 	}
 
-	freq := tmp.freqParent
+	freq := tmp.FreqParent
 	nextFreq := freq.Next()
 	if nextFreq == nil {
 		nextFreq = freq
@@ -68,9 +70,9 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 	freqVal := freq.Value.(*frequencyItem)
 	nextFreqVal := nextFreq.Value.(*frequencyItem)
 	headFreq := r.frequencyList.Front()
-	if nextFreq == headFreq || nextFreqVal.frequency != (freqVal.frequency+1) {
+	if nextFreq == headFreq || nextFreqVal.Frequency != (freqVal.Frequency+1) {
 		newNodeFreq := &frequencyItem{
-			frequency: freqVal.frequency + 1,
+			Frequency: freqVal.Frequency + 1,
 		}
 		nextFreq = r.frequencyList.InsertAfter(newNodeFreq, freq)
 	}
@@ -80,7 +82,7 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 		nextFreqVal.items = make(map[*lfuItem]bool)
 	}
 	nextFreqVal.items[tmp] = true
-	tmp.freqParent = nextFreq
+	tmp.FreqParent = nextFreq
 	delete(freqVal.items, tmp)
 	if len(freqVal.items) == 0 {
 		r.frequencyList.Remove(freq)
@@ -102,13 +104,13 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 
 	if freq == nil {
 		newNodeFreq := &frequencyItem{
-			frequency: 1,
+			Frequency: 1,
 		}
 		freq = r.frequencyList.PushFront(newNodeFreq)
 		freqVal = freq.Value.(*frequencyItem)
 		item := &lfuItem{
-			freqParent: freq,
-			data:       doc,
+			FreqParent: freq,
+			Data:       doc,
 		}
 
 		freqVal.items = map[*lfuItem]bool{
@@ -119,9 +121,9 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 	}
 
 	freqVal = freq.Value.(*frequencyItem)
-	if freqVal.frequency != 1 {
+	if freqVal.Frequency != 1 {
 		newNodeFreq := &frequencyItem{
-			frequency: 1,
+			Frequency: 1,
 			items:     make(map[*lfuItem]bool),
 		}
 		freq = r.frequencyList.PushFront(newNodeFreq)
@@ -129,28 +131,37 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 
 	freqVal = freq.Value.(*frequencyItem)
 	item := &lfuItem{
-		freqParent: freq,
-		data:       doc,
+		FreqParent: freq,
+		Data:       doc,
 	}
 
 	freqVal.items[item] = true
 	r.byKey[doc.Key] = item
 
-	// Remove oldest
+	// TODO: (bxcodec)
+	// Move this to go-routine if possible
+	// Remove oldest if the maxmemory reached
+	byteMap := encodeGob(r.byKey)
+	for uint64(len(byteMap)) > r.maxMemory {
+		r.removeLfuOldest()
+	}
+
+	// Remove oldest if the maxmemory reached
 	if uint64(len(r.byKey)) > r.maxSize {
 		r.removeLfuOldest()
 	}
 	return
 }
 
-func (r *Repository) printList() {
-	for elem := r.frequencyList.Front(); elem != nil; elem = elem.Next() {
-		first := elem.Value.(*frequencyItem)
-		fmt.Printf("Elem Freq: %+v\n", first.frequency)
-		for item, _ := range first.items {
-			fmt.Printf("\tElem Doc: %+v\n", item)
-		}
+func encodeGob(v interface{}) []byte {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(v)
+	if err != nil {
+		panic(err)
 	}
+
+	return buf.Bytes()
 }
 
 func (r *Repository) removeLfuOldest() (oldestItem *lfuItem) {
@@ -160,9 +171,8 @@ func (r *Repository) removeLfuOldest() (oldestItem *lfuItem) {
 	minStoreTime := time.Now().Unix()
 	// Search for the oldest one with store time
 	for item := range freqItem.items {
-
-		if item.data.StoredTime < minStoreTime {
-			minStoreTime = item.data.StoredTime
+		if item.Data.StoredTime < minStoreTime {
+			minStoreTime = item.Data.StoredTime
 			oldestItem = item
 		}
 	}
@@ -174,7 +184,7 @@ func (r *Repository) removeLfuOldest() (oldestItem *lfuItem) {
 
 	// Remove from Cache
 	delete(freqItem.items, oldestItem)
-	delete(r.byKey, oldestItem.data.Key)
+	delete(r.byKey, oldestItem.Data.Key)
 	if len(freqItem.items) == 0 {
 		r.frequencyList.Remove(lfuList)
 	}
@@ -208,10 +218,10 @@ func (r *Repository) Delete(key string) (ok bool, err error) {
 		return
 	}
 
-	freqItem := lfuItem.freqParent.Value.(*frequencyItem)
+	freqItem := lfuItem.FreqParent.Value.(*frequencyItem)
 	delete(freqItem.items, lfuItem)
 	if len(freqItem.items) == 0 {
-		r.frequencyList.Remove(lfuItem.freqParent)
+		r.frequencyList.Remove(lfuItem.FreqParent)
 	}
 	delete(r.byKey, key)
 	return
