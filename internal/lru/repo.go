@@ -1,7 +1,8 @@
-package repository
+package lru
 
 import (
 	"container/list"
+	"encoding/json"
 	"time"
 
 	"github.com/bxcodec/gotcha/cache"
@@ -9,8 +10,8 @@ import (
 
 // Repository implements the Repository cache
 type Repository struct {
-	maxsize              uint64
-	maxmemory            uint64
+	maxSize              uint64
+	maxMemory            uint64
 	fragmentPositionList *list.List
 	items                map[string]*list.Element
 	expiryTresHold       time.Duration
@@ -19,10 +20,11 @@ type Repository struct {
 // New constructs an Repository of the given size
 func New(size, memory uint64, expiryTresHold time.Duration) *Repository {
 	c := &Repository{
-		maxsize:              size,
+		maxSize:              size,
 		fragmentPositionList: list.New(),
 		items:                make(map[string]*list.Element),
 		expiryTresHold:       expiryTresHold,
+		maxMemory:            memory,
 	}
 	return c
 }
@@ -42,13 +44,26 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 	r.items[doc.Key] = elem
 
 	// Remove the oldest if the fragment is full
-	if uint64(r.fragmentPositionList.Len()) > r.maxsize {
+	if uint64(r.fragmentPositionList.Len()) > r.maxSize {
 		r.removeOldest()
 	}
 
-	// TODO: (bxcodec)
-	// Remove the oldest if the memory is reach the maximun
-	return nil
+	// To increase performances Avoid memory limit if the maxMemory is zero
+	if r.maxMemory == 0 {
+		return
+	}
+
+	byteMap, err := json.Marshal(r.items)
+	if err != nil {
+		r.Delete(doc.Key)
+		return
+	}
+
+	// Remove oldest if the maxmemory reached
+	if uint64(len(byteMap)) > r.maxMemory {
+		r.removeOldest()
+	}
+	return
 }
 
 // Get looks up a key's value from the cache.
@@ -135,12 +150,6 @@ func (r *Repository) Keys() (keys []string, err error) {
 // Len returns the number of items in the cache.
 func (r *Repository) Len() (len int64) {
 	len = int64(r.fragmentPositionList.Len())
-	return
-}
-
-// MemoryUsage returns the number of memory usage for all cache item
-func (r *Repository) MemoryUsage() (size int64, err error) {
-	panic("TODO: (bxcodec)")
 	return
 }
 

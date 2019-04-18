@@ -1,9 +1,13 @@
 package gotcha
 
 import (
+	"sync"
+	"time"
+
 	"github.com/bxcodec/gotcha/cache"
-	"github.com/bxcodec/gotcha/lfu"
-	"github.com/bxcodec/gotcha/lru"
+	"github.com/bxcodec/gotcha/internal"
+	"github.com/bxcodec/gotcha/internal/lfu"
+	"github.com/bxcodec/gotcha/internal/lru"
 )
 
 var (
@@ -14,10 +18,6 @@ var (
 // New will create a new cache client. If the options not set, the cache will use the default options
 func New(options ...*cache.Option) (c cache.Cache) {
 	option := mergeOptions(options...)
-	if option.MaxMemory == 0 { // Unlimited
-		// TODO: (bxcodec)
-		// option.MaxMemory = (get max memory)
-	}
 	if option.MaxSizeItem == 0 {
 		// Use default
 		option.MaxSizeItem = cache.DefaultSize
@@ -31,11 +31,8 @@ func New(options ...*cache.Option) (c cache.Cache) {
 		option.ExpiryTime = cache.DefaultExpiryTime
 	}
 
-	switch option.AlgorithmType {
-	case cache.LRUAlgorithm:
-		c = lru.NewCache(*option)
-	case cache.LFUAlgorithm:
-		c = lfu.NewCache(*option)
+	c = &Cache{
+		repo: NewRepository(*option),
 	}
 	return
 }
@@ -87,4 +84,84 @@ func GetKeys() (keys []string, err error) {
 // ClearCache will Clear the cache using default option
 func ClearCache() (err error) {
 	return DefaultCache.ClearCache()
+}
+
+// NewRepository return the implementations of repository cache
+func NewRepository(option cache.Option) internal.Repository {
+	var repo internal.Repository
+	switch option.AlgorithmType {
+	case cache.LRUAlgorithm:
+		repo = lru.New(option.MaxSizeItem, option.MaxMemory, option.ExpiryTime)
+	case cache.LFUAlgorithm:
+		repo = lfu.New(option.MaxSizeItem, option.MaxMemory, option.ExpiryTime)
+	}
+	return repo
+}
+
+// Cache ...
+type Cache struct {
+	sync.RWMutex
+	repo internal.Repository
+}
+
+// Set ...
+// TODO: (bxcodec)
+// Add Test for this function
+func (c *Cache) Set(key string, value interface{}) (err error) {
+	document := &cache.Document{
+		Key:        key,
+		Value:      value,
+		StoredTime: time.Now().Unix(),
+	}
+	c.Lock()
+	c.repo.Set(document)
+	c.Unlock()
+	return
+}
+
+// Get ...
+// TODO: (bxcodec)
+// Add Test for this function
+func (c *Cache) Get(key string) (value interface{}, err error) {
+	c.RLock()
+	doc, err := c.repo.Get(key)
+	c.RUnlock()
+	if err != nil {
+		return
+	}
+	value = doc.Value
+	return
+}
+
+// Delete ...
+// TODO: (bxcodec)
+// Add Test for this function
+func (c *Cache) Delete(key string) (err error) {
+	c.Lock()
+	_, err = c.repo.Delete(key)
+	c.Unlock()
+	if err != nil {
+		return
+	}
+	return
+}
+
+// GetKeys ...
+// TODO: (bxcodec)
+// Add Test for this function
+func (c *Cache) GetKeys() (keys []string, err error) {
+	c.RLock()
+	keys, err = c.repo.Keys()
+	c.RUnlock()
+	return
+}
+
+// ClearCache ...
+// TODO: (bxcodec)
+// Add Test for this function
+func (c *Cache) ClearCache() (err error) {
+	c.Lock()
+	err = c.repo.Clear()
+	c.Unlock()
+	return
 }

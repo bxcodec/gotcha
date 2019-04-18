@@ -1,16 +1,22 @@
-package repository_test
+package lfu_test
 
 import (
+	"flag"
 	"fmt"
+	"log"
+	"math/rand"
+	"os"
+	"runtime"
+	"runtime/pprof"
 	"testing"
 	"time"
 
 	"github.com/bxcodec/gotcha/cache"
-	"github.com/bxcodec/gotcha/lfu/repository"
+	repository "github.com/bxcodec/gotcha/internal/lfu"
 )
 
 func TestSet(t *testing.T) {
-	repo := repository.New(5, 100, time.Second*5)
+	repo := repository.New(5, 10*cache.MB, time.Second*5)
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
@@ -51,7 +57,7 @@ func TestSetWithMultipleKeyExists(t *testing.T) {
 			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
 	}
-	repo := repository.New(5, 100, time.Second*5)
+	repo := repository.New(5, 10*cache.MB, time.Second*5)
 	for _, doc := range arrDoc {
 		err := repo.Set(doc)
 		if err != nil {
@@ -61,7 +67,7 @@ func TestSetWithMultipleKeyExists(t *testing.T) {
 }
 
 func TestGetOne(t *testing.T) {
-	repo := repository.New(5, 100, time.Second*5)
+	repo := repository.New(5, 500, time.Second*5)
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
@@ -84,7 +90,7 @@ func TestGetOne(t *testing.T) {
 }
 
 func TestGetWithMultipleSet(t *testing.T) {
-	repo := repository.New(4, 100, time.Minute*5)
+	repo := repository.New(4, 500, time.Minute*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -180,7 +186,7 @@ func TestGetWithMultipleSet(t *testing.T) {
 }
 
 func TestGetExpiredItem(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -237,7 +243,7 @@ func TestGetExpiredItem(t *testing.T) {
 }
 
 func TestGetExpiredButSingleSetItemInList(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -290,7 +296,7 @@ func TestGetExpiredButSingleSetItemInList(t *testing.T) {
 }
 
 func TestSetWithFrequency1IsNotExists(t *testing.T) {
-	repo := repository.New(5, 100, time.Second*5)
+	repo := repository.New(5, 500, time.Second*5)
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
@@ -325,7 +331,7 @@ func TestSetWithFrequency1IsNotExists(t *testing.T) {
 }
 
 func TestClearCache(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -376,7 +382,7 @@ func TestClearCache(t *testing.T) {
 }
 
 func TestContains(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -418,7 +424,7 @@ func TestContains(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -473,7 +479,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestGetKeys(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -515,15 +521,32 @@ func TestGetKeys(t *testing.T) {
 	}
 
 	expectedKeys := []string{"key-1", "key-3", "key-4"}
-	for _, k := range keys {
-		if !contains(expectedKeys, k) {
+	for _, k := range expectedKeys {
+		if !contains(keys, k) {
 			t.Fatalf("expected %v, actual %v", true, contains(expectedKeys, k))
 		}
 	}
 }
 
+// This benchmark code below also used for profiling to get the memory and CPU usage
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to `file`")
+var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
+
 func BenchmarkSetItem(b *testing.B) {
-	repo := repository.New(1000, 100, time.Second*40)
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		defer f.Close()
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	repo := repository.New(500, cache.MB*5, time.Minute*40)
 	preDoc := &cache.Document{
 		Key:        "key-1",
 		Value:      "Hello World",
@@ -535,15 +558,42 @@ func BenchmarkSetItem(b *testing.B) {
 	}
 	doc := &cache.Document{
 		Key:        "key-2",
-		Value:      "Hello World",
+		Value:      `Hello World`,
 		StoredTime: time.Now().Add(time.Second * -1).Unix(),
 	}
+
+	counterMiss := 0
+	counterHit := 0
 	for i := 0; i < b.N; i++ {
 		temp := *doc
 		temp.Key = fmt.Sprintf("key-%d", i)
 		err := repo.Set(&temp)
 		if err != nil {
 			b.Fatalf("expected %v, actual %v", nil, err)
+		}
+
+		randVal := 1
+		if i != 0 {
+			randVal = rand.Intn(i)
+		}
+		res, err := repo.Get(fmt.Sprintf("key-%d", randVal))
+		if res == nil || err != nil {
+			counterMiss++
+		} else {
+			counterHit++
+		}
+	}
+	fmt.Println("Counter hit: ", counterHit)
+	fmt.Println("Counter miss: ", counterMiss)
+	if *memprofile != "" {
+		f, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		defer f.Close()
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			log.Fatal("could not write memory profile: ", err)
 		}
 	}
 }
