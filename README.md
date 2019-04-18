@@ -88,18 +88,18 @@ gotcha.NewOption().SetAlgorithm(cache.LRUAlgorithm).
 	  SetMaxMemory(cache.MB * 10)
 ```
 
-**Warn** Even gotcha support for MaxMemory, but current version it still using a simple json/encoding then count the byte size. So it will be slower if you set the MaxMemory.
+**Warn**: Even gotcha support for MaxMemory, but the current version it's still using a simple json/encoding to count the byte size. So it will be slower if you set the MaxMemory.
 
-Benchmark for LRU with and without max-memory
+Benchmark for LRU with/without MaxMemory
 
 ```
-# With Max Memory
+# With MaxMemory
 20000000	      7878 ns/op	    1646 B/op	      20 allocs/op
 
-# Without Max Memory
+# Without MaxMemory
 200000000	       776 ns/op	     150 B/op	       6 allocs/op
 ```
-If you seeking for fast performances and also your memory is high, ignore the MaxMemory options. I'm still looking for the better solutions for this problem.
+If you seeking for fast performances and also your memory is high, ignore the MaxMemory options. I'm still looking for the better solutions for this problem. And if you have a better solutions, please kindly open and issue or submit a PR directly for the better results. 
 
 #### LRU
 ```go
