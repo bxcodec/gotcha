@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/bxcodec/gotcha/cache"
-	// "github.com/bxcodec/gotcha/lfu"
 	"github.com/bxcodec/gotcha/internal"
 	"github.com/bxcodec/gotcha/internal/lfu"
 	"github.com/bxcodec/gotcha/internal/lru"
