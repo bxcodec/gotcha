@@ -468,7 +468,7 @@ func BenchmarkSetItem(b *testing.B) {
 		defer pprof.StopCPUProfile()
 	}
 
-	repo := repository.New(10, 500, time.Minute*5)
+	repo := repository.New(10, 0, time.Minute*5)
 	preDoc := &cache.Document{
 		Key:        "key-1",
 		Value:      "Hello World",
