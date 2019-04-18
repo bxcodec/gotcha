@@ -34,13 +34,6 @@ func New(options ...*cache.Option) (c cache.Cache) {
 		option.ExpiryTime = cache.DefaultExpiryTime
 	}
 
-	// switch option.AlgorithmType {
-	// case cache.LRUAlgorithm:
-	// 	c = lru.NewCache(*option)
-	// case cache.LFUAlgorithm:
-	// 	c = lfu.NewCache(*option)
-	// }
-
 	c = &Cache{
 		repo: NewRepository(*option),
 	}
@@ -96,7 +89,7 @@ func ClearCache() (err error) {
 	return DefaultCache.ClearCache()
 }
 
-// NewCache return the implementations of cache with LRU algorithm
+// NewRepository return the implementations of repository cache
 func NewRepository(option cache.Option) internal.Repository {
 	var repo internal.Repository
 	switch option.AlgorithmType {
