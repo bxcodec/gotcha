@@ -1,10 +1,8 @@
-package repository
+package lfu
 
 import (
-	"bytes"
 	"container/list"
-	"encoding/gob"
-	"fmt"
+	"encoding/json"
 	"reflect"
 	"time"
 
@@ -35,7 +33,6 @@ type frequencyItem struct {
 
 // New ...
 func New(maxSize, maxMemory uint64, expiryTreshold time.Duration) (repo *Repository) {
-	gob.Register(frequencyItem{}) // this is for serialization to count total documents (in bytes) saved in memory
 	repo = &Repository{
 		frequencyList:  list.New(),
 		byKey:          make(map[string]*lfuItem),
@@ -102,7 +99,6 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 
 	freq := r.frequencyList.Front() // Front will always be the least frequently used
 	freqVal := &frequencyItem{}
-
 	if freq == nil {
 		newNodeFreq := &frequencyItem{
 			Frequency: 1,
@@ -141,37 +137,32 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 
 	// TODO: (bxcodec)
 	// Move this to go-routine if possible
-	// Remove oldest if the maxmemory reached
-	byteMap := encodeGob(r.byKey)
-	for uint64(len(byteMap)) > r.maxMemory {
-		fmt.Println("Size: ", len(byteMap))
+	// Remove oldest if the max-size reached
+	if uint64(len(r.byKey)) > r.maxSize {
 		r.removeLfuOldest()
 	}
 
+	byteMap, err := json.Marshal(r.byKey)
+	if err != nil {
+		r.Delete(doc.Key)
+		return
+	}
 	// Remove oldest if the maxmemory reached
-	if uint64(len(r.byKey)) > r.maxSize {
+	if uint64(len(byteMap)) > r.maxMemory {
 		r.removeLfuOldest()
 	}
 	return
 }
 
-func encodeGob(v interface{}) []byte {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(v)
-	if err != nil {
-		panic(err)
-	}
-
-	return buf.Bytes()
+func encodeJSON(v interface{}) ([]byte, error) {
+	return json.Marshal(v)
 }
 
 func (r *Repository) removeLfuOldest() (oldestItem *lfuItem) {
 	lfuList := r.frequencyList.Front()
-	// if r.frequencyList.Len() == 0 {
-	// 	return nil
-	// }
-	fmt.Println("Item: ", lfuList.Value)
+	if r.frequencyList.Len() == 0 {
+		return nil
+	}
 	freqItem := lfuList.Value.(*frequencyItem)
 
 	minStoreTime := time.Now().Unix()

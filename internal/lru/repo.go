@@ -1,7 +1,9 @@
-package repository
+package lru
 
 import (
 	"container/list"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/bxcodec/gotcha/cache"
@@ -9,8 +11,8 @@ import (
 
 // Repository implements the Repository cache
 type Repository struct {
-	maxsize              uint64
-	maxmemory            uint64
+	maxSize              uint64
+	maxMemory            uint64
 	fragmentPositionList *list.List
 	items                map[string]*list.Element
 	expiryTresHold       time.Duration
@@ -19,10 +21,11 @@ type Repository struct {
 // New constructs an Repository of the given size
 func New(size, memory uint64, expiryTresHold time.Duration) *Repository {
 	c := &Repository{
-		maxsize:              size,
+		maxSize:              size,
 		fragmentPositionList: list.New(),
 		items:                make(map[string]*list.Element),
 		expiryTresHold:       expiryTresHold,
+		maxMemory:            memory,
 	}
 	return c
 }
@@ -42,12 +45,20 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 	r.items[doc.Key] = elem
 
 	// Remove the oldest if the fragment is full
-	if uint64(r.fragmentPositionList.Len()) > r.maxsize {
+	if uint64(r.fragmentPositionList.Len()) > r.maxSize {
 		r.removeOldest()
 	}
 
-	// TODO: (bxcodec)
-	// Remove the oldest if the memory is reach the maximun
+	byteMap, err := json.Marshal(r.items)
+	if err != nil {
+		r.Delete(doc.Key)
+		return
+	}
+	fmt.Println("Current Size", len(byteMap), r.maxMemory)
+	// Remove oldest if the maxmemory reached
+	if uint64(len(byteMap)) > r.maxMemory {
+		r.removeOldest()
+	}
 	return nil
 }
 

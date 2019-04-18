@@ -1,4 +1,4 @@
-package repository_test
+package lfu_test
 
 import (
 	"flag"
@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/bxcodec/gotcha/cache"
-	"github.com/bxcodec/gotcha/lfu/repository"
+	repository "github.com/bxcodec/gotcha/internal/lfu"
 )
 
 func TestSet(t *testing.T) {
@@ -67,7 +67,7 @@ func TestSetWithMultipleKeyExists(t *testing.T) {
 }
 
 func TestGetOne(t *testing.T) {
-	repo := repository.New(5, 100, time.Second*5)
+	repo := repository.New(5, 500, time.Second*5)
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
@@ -186,7 +186,7 @@ func TestGetWithMultipleSet(t *testing.T) {
 }
 
 func TestGetExpiredItem(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -243,7 +243,7 @@ func TestGetExpiredItem(t *testing.T) {
 }
 
 func TestGetExpiredButSingleSetItemInList(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -296,7 +296,7 @@ func TestGetExpiredButSingleSetItemInList(t *testing.T) {
 }
 
 func TestSetWithFrequency1IsNotExists(t *testing.T) {
-	repo := repository.New(5, 100, time.Second*5)
+	repo := repository.New(5, 500, time.Second*5)
 	doc := &cache.Document{
 		Key:        "key-2",
 		Value:      "Hello World",
@@ -331,7 +331,7 @@ func TestSetWithFrequency1IsNotExists(t *testing.T) {
 }
 
 func TestClearCache(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -382,7 +382,7 @@ func TestClearCache(t *testing.T) {
 }
 
 func TestContains(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -424,7 +424,7 @@ func TestContains(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -479,7 +479,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestGetKeys(t *testing.T) {
-	repo := repository.New(4, 100, time.Second*5)
+	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
 		&cache.Document{
 			Key:        "key-1",
@@ -521,8 +521,8 @@ func TestGetKeys(t *testing.T) {
 	}
 
 	expectedKeys := []string{"key-1", "key-3", "key-4"}
-	for _, k := range keys {
-		if !contains(expectedKeys, k) {
+	for _, k := range expectedKeys {
+		if !contains(keys, k) {
 			t.Fatalf("expected %v, actual %v", true, contains(expectedKeys, k))
 		}
 	}
@@ -546,7 +546,7 @@ func BenchmarkSetItem(b *testing.B) {
 		defer pprof.StopCPUProfile()
 	}
 
-	repo := repository.New(1000, 100, time.Minute*40)
+	repo := repository.New(5000, 500, time.Minute*40)
 	preDoc := &cache.Document{
 		Key:        "key-1",
 		Value:      "Hello World",
@@ -564,7 +564,7 @@ func BenchmarkSetItem(b *testing.B) {
 
 	counterMiss := 0
 	counterHit := 0
-	b.N = 100
+	b.N = 500
 	for i := 0; i < b.N; i++ {
 		temp := *doc
 		temp.Key = fmt.Sprintf("key-%d", i)
