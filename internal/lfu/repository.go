@@ -142,6 +142,11 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 		r.removeLfuOldest()
 	}
 
+	// Avoid memory limit if set zero to increase performances
+	if r.maxMemory == 0 {
+		return
+	}
+
 	byteMap, err := json.Marshal(r.byKey)
 	if err != nil {
 		r.Delete(doc.Key)

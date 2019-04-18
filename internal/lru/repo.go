@@ -3,7 +3,6 @@ package lru
 import (
 	"container/list"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/bxcodec/gotcha/cache"
@@ -49,17 +48,22 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 		r.removeOldest()
 	}
 
+	// To increase performances Avoid memory limit if the maxMemory is zero
+	if r.maxMemory == 0 {
+		return
+	}
+
 	byteMap, err := json.Marshal(r.items)
 	if err != nil {
 		r.Delete(doc.Key)
 		return
 	}
-	fmt.Println("Current Size", len(byteMap), r.maxMemory)
+
 	// Remove oldest if the maxmemory reached
 	if uint64(len(byteMap)) > r.maxMemory {
 		r.removeOldest()
 	}
-	return nil
+	return
 }
 
 // Get looks up a key's value from the cache.
@@ -146,12 +150,6 @@ func (r *Repository) Keys() (keys []string, err error) {
 // Len returns the number of items in the cache.
 func (r *Repository) Len() (len int64) {
 	len = int64(r.fragmentPositionList.Len())
-	return
-}
-
-// MemoryUsage returns the number of memory usage for all cache item
-func (r *Repository) MemoryUsage() (size int64, err error) {
-	panic("TODO: (bxcodec)")
 	return
 }
 
