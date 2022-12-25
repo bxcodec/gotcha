@@ -12,3 +12,5 @@
 *.out
 bin/
 *.prof
+
+.idea/
