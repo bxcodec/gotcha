@@ -1,3 +1,6 @@
+ALL_GO_MOD_DIRS := $(shell find . -type f -name 'go.mod' -exec dirname {} \; | sort)
+TAG := v1.0.0-beta.3
+
 # Exporting bin folder to the path for makefile
 export PATH   := $(PWD)/bin:$(PATH)
 # Default Shell
@@ -40,4 +43,17 @@ lint: $(GOLANGCI) ## Runs golangci-lint with predefined configuration
 	golangci-lint version
 	golangci-lint run -c .golangci.yaml ./...
 
-.PHONY: lint lint-prepare clean build unittest 
+.PHONY: lint lint-prepare clean build unittest
+
+go_mod_tidy:
+	go get -u && go mod tidy -go=1.19
+	set -e; for dir in $(ALL_GO_MOD_DIRS); do \
+	  echo "go mod tidy in $${dir}"; \
+	  (cd "$${dir}" && \
+	    go get -u ./... && \
+	    go mod tidy -go=1.19); \
+	done
+
+release:
+	TAG=$(TAG) ./scripts/release.sh
+	TAG=$(TAG) ./scripts/tag.sh
