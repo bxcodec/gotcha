@@ -31,14 +31,14 @@ const (
 	DefaultMaxMemory = 10 * MB
 )
 
-// Document ...
+// Document represent the Document structure stored in the cache
 type Document struct {
 	Key        string
 	Value      interface{}
-	StoredTime int64 //timestamp
+	StoredTime int64 // timestamp
 }
 
-// Option ...
+// Option used for Cache configuration
 type Option struct {
 	AlgorithmType string        // represent the algorithm type
 	ExpiryTime    time.Duration // represent the expiry time of each stored item

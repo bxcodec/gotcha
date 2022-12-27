@@ -55,15 +55,15 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 
 	byteMap, err := json.Marshal(r.items)
 	if err != nil {
-		r.Delete(doc.Key)
-		return
+		_, _ = r.Delete(doc.Key)
+		return err
 	}
 
 	// Remove oldest if the maxmemory reached
 	if uint64(len(byteMap)) > r.maxMemory {
 		r.removeOldest()
 	}
-	return
+	return nil
 }
 
 // Get looks up a key's value from the cache.
@@ -72,7 +72,7 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 		res = elem.Value.(*cache.Document)
 		storedTime := time.Unix(res.StoredTime, 0)
 		if time.Since(storedTime) > r.expiryTresHold { // if expired, delete directly
-			_, err = r.Delete(key)
+			_, _ = r.Delete(key)
 			return nil, cache.ErrMissed
 		}
 		r.fragmentPositionList.MoveToFront(elem)
@@ -148,8 +148,8 @@ func (r *Repository) Keys() (keys []string, err error) {
 }
 
 // Len returns the number of items in the cache.
-func (r *Repository) Len() (len int64) {
-	len = int64(r.fragmentPositionList.Len())
+func (r *Repository) Len() (itemLen int64) {
+	itemLen = int64(r.fragmentPositionList.Len())
 	return
 }
 
