@@ -9,7 +9,7 @@ import (
 	"github.com/bxcodec/gotcha/cache"
 )
 
-// Repository ...
+// Repository represent the data repository for inernal cache
 type Repository struct {
 	frequencyList  *list.List // will store list of frequencyItem
 	byKey          map[string]*lfuItem
@@ -31,7 +31,7 @@ type frequencyItem struct {
 	items map[*lfuItem]bool
 }
 
-// New ...
+// New will initialize the LFU memory cache
 func New(maxSize, maxMemory uint64, expiryTreshold time.Duration) (repo *Repository) {
 	repo = &Repository{
 		frequencyList:  list.New(),
@@ -43,7 +43,7 @@ func New(maxSize, maxMemory uint64, expiryTreshold time.Duration) (repo *Reposit
 	return
 }
 
-// Get ...
+// Get will retrieve the item from cache
 func (r *Repository) Get(key string) (res *cache.Document, err error) {
 	tmp := r.byKey[key]
 	if tmp == nil {
@@ -55,7 +55,7 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 	//  Check Expiry and Remove the expired item
 	storedTime := time.Unix(res.StoredTime, 0)
 	if time.Since(storedTime) > r.expiryTreshold {
-		r.Delete(key)
+		_, _ = r.Delete(key)
 		return nil, cache.ErrMissed
 	}
 
@@ -86,10 +86,10 @@ func (r *Repository) Get(key string) (res *cache.Document, err error) {
 		r.frequencyList.Remove(freq)
 	}
 
-	return
+	return res, nil
 }
 
-// Set ...
+// Set wil save the item to cache
 func (r *Repository) Set(doc *cache.Document) (err error) {
 	if _, ok := r.byKey[doc.Key]; ok {
 		// TODO: (bxcodec)
@@ -98,13 +98,12 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 	}
 
 	freq := r.frequencyList.Front() // Front will always be the least frequently used
-	freqVal := &frequencyItem{}
 	if freq == nil {
 		newNodeFreq := &frequencyItem{
 			Frequency: 1,
 		}
 		freq = r.frequencyList.PushFront(newNodeFreq)
-		freqVal = freq.Value.(*frequencyItem)
+		freqVal := freq.Value.(*frequencyItem)
 		item := &lfuItem{
 			FreqParent: freq,
 			Data:       doc,
@@ -117,7 +116,7 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 		return
 	}
 
-	freqVal = freq.Value.(*frequencyItem)
+	freqVal := freq.Value.(*frequencyItem)
 	if freqVal.Frequency != 1 {
 		newNodeFreq := &frequencyItem{
 			Frequency: 1,
@@ -149,28 +148,25 @@ func (r *Repository) Set(doc *cache.Document) (err error) {
 
 	byteMap, err := json.Marshal(r.byKey)
 	if err != nil {
-		r.Delete(doc.Key)
+		_, _ = r.Delete(doc.Key)
 		return
 	}
 	// Remove oldest if the maxmemory reached
 	if uint64(len(byteMap)) > r.maxMemory {
 		r.removeLfuOldest()
 	}
-	return
+	return nil
 }
 
-func encodeJSON(v interface{}) ([]byte, error) {
-	return json.Marshal(v)
-}
-
-func (r *Repository) removeLfuOldest() (oldestItem *lfuItem) {
+func (r *Repository) removeLfuOldest() {
 	lfuList := r.frequencyList.Front()
 	if r.frequencyList.Len() == 0 {
-		return nil
+		return
 	}
 	freqItem := lfuList.Value.(*frequencyItem)
 
 	minStoreTime := time.Now().Unix()
+	var oldestItem *lfuItem
 	// Search for the oldest one with store time
 	for item := range freqItem.items {
 		if item.Data.StoredTime < minStoreTime {
@@ -190,10 +186,9 @@ func (r *Repository) removeLfuOldest() (oldestItem *lfuItem) {
 	if len(freqItem.items) == 0 {
 		r.frequencyList.Remove(lfuList)
 	}
-	return
 }
 
-// Clear ...
+// Clear will clear up the item from cache
 func (r *Repository) Clear() (err error) {
 	for k := range r.byKey {
 		delete(r.byKey, k)
@@ -202,18 +197,18 @@ func (r *Repository) Clear() (err error) {
 	return
 }
 
-// Len ...
+// Len return the total items in the cache
 func (r *Repository) Len() int {
 	return len(r.byKey)
 }
 
-// Contains ...
+// Contains check if any item with the given key exist in the cache
 func (r *Repository) Contains(key string) (ok bool) {
 	_, ok = r.byKey[key]
 	return
 }
 
-// Delete ...
+// Delete will delete the item from cache
 func (r *Repository) Delete(key string) (ok bool, err error) {
 	lfuItem, ok := r.byKey[key]
 	if !ok {
@@ -229,7 +224,7 @@ func (r *Repository) Delete(key string) (ok bool, err error) {
 	return
 }
 
-// Keys ...
+// Keys return all keys from cache
 func (r *Repository) Keys() (keys []string, err error) {
 	for k := range r.byKey {
 		keys = append(keys, k)

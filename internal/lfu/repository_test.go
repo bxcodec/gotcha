@@ -31,27 +31,27 @@ func TestSet(t *testing.T) {
 
 func TestSetWithMultipleKeyExists(t *testing.T) {
 	arrDoc := []*cache.Document{
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "Hello World 1",
 			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-2",
 			Value:      "Hello World 2",
 			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "Hello World 1 Modified",
 			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-3",
 			Value:      "Hello World 3 Modified",
 			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "Hello World 1 Modified Twice",
 			StoredTime: time.Now().Add(time.Second * -1).Unix(),
@@ -92,27 +92,27 @@ func TestGetOne(t *testing.T) {
 func TestGetWithMultipleSet(t *testing.T) {
 	repo := repository.New(4, 500, time.Minute*5)
 	arrDoc := []*cache.Document{
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A",
 			StoredTime: time.Now().Add(time.Minute * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A'",
 			StoredTime: time.Now().Add(time.Second * -40).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-3",
 			Value:      "C",
 			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A''",
 			StoredTime: time.Now().Add(time.Second * -10).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-4",
 			Value:      "D",
 			StoredTime: time.Now().Add(time.Second * -5).Unix(),
@@ -188,17 +188,17 @@ func TestGetWithMultipleSet(t *testing.T) {
 func TestGetExpiredItem(t *testing.T) {
 	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A",
 			StoredTime: time.Now().Add(time.Minute * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-3",
 			Value:      "C",
 			StoredTime: time.Now().Add(time.Second * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-4",
 			Value:      "D",
 			StoredTime: time.Now().Add(time.Second * -3).Unix(),
@@ -245,12 +245,12 @@ func TestGetExpiredItem(t *testing.T) {
 func TestGetExpiredButSingleSetItemInList(t *testing.T) {
 	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A",
 			StoredTime: time.Now().Add(time.Minute * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-4",
 			Value:      "D",
 			StoredTime: time.Now().Add(time.Second * -3).Unix(),
@@ -327,33 +327,32 @@ func TestSetWithFrequency1IsNotExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected %v, actual %v", nil, err)
 	}
-
 }
 
 func TestClearCache(t *testing.T) {
 	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A",
 			StoredTime: time.Now().Add(time.Minute * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A'",
 			StoredTime: time.Now().Add(time.Second * -40).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-3",
 			Value:      "C",
 			StoredTime: time.Now().Add(time.Second * -30).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A''",
 			StoredTime: time.Now().Add(time.Second * -10).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-4",
 			Value:      "D",
 			StoredTime: time.Now().Add(time.Second * -5).Unix(),
@@ -384,27 +383,27 @@ func TestClearCache(t *testing.T) {
 func TestContains(t *testing.T) {
 	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A",
 			StoredTime: time.Now().Add(time.Minute * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A'",
 			StoredTime: time.Now().Add(time.Second * -40).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-3",
 			Value:      "C",
 			StoredTime: time.Now().Add(time.Second * -30).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A''",
 			StoredTime: time.Now().Add(time.Second * -10).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-4",
 			Value:      "D",
 			StoredTime: time.Now().Add(time.Second * -5).Unix(),
@@ -426,27 +425,27 @@ func TestContains(t *testing.T) {
 func TestDelete(t *testing.T) {
 	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A",
 			StoredTime: time.Now().Add(time.Minute * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A'",
 			StoredTime: time.Now().Add(time.Second * -40).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-3",
 			Value:      "C",
 			StoredTime: time.Now().Add(time.Second * -30).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A''",
 			StoredTime: time.Now().Add(time.Second * -10).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-4",
 			Value:      "D",
 			StoredTime: time.Now().Add(time.Second * -5).Unix(),
@@ -481,17 +480,17 @@ func TestDelete(t *testing.T) {
 func TestGetKeys(t *testing.T) {
 	repo := repository.New(4, 500, time.Second*5)
 	arrDoc := []*cache.Document{
-		&cache.Document{
+		{
 			Key:        "key-1",
 			Value:      "A",
 			StoredTime: time.Now().Add(time.Minute * -1).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-3",
 			Value:      "C",
 			StoredTime: time.Now().Add(time.Second * -30).Unix(),
 		},
-		&cache.Document{
+		{
 			Key:        "key-4",
 			Value:      "D",
 			StoredTime: time.Now().Add(time.Second * -5).Unix(),
@@ -510,7 +509,7 @@ func TestGetKeys(t *testing.T) {
 		t.Fatalf("expected %v, actual %v", nil, err)
 	}
 
-	var contains = func(kesy []string, item string) (ok bool) {
+	var contains = func(keys []string, item string) (ok bool) {
 		for _, k := range keys {
 			ok = item == k
 			if ok {
@@ -539,10 +538,11 @@ func BenchmarkSetItem(b *testing.B) {
 		if err != nil {
 			log.Fatal("could not create CPU profile: ", err)
 		}
-		defer f.Close()
+
 		if err := pprof.StartCPUProfile(f); err != nil {
 			log.Fatal("could not start CPU profile: ", err)
 		}
+		defer f.Close()
 		defer pprof.StopCPUProfile()
 	}
 
@@ -588,7 +588,7 @@ func BenchmarkSetItem(b *testing.B) {
 	if *memprofile != "" {
 		f, err := os.Create(*memprofile)
 		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
+			log.Fatal("could not create memory profile: ", err) //nolint
 		}
 		defer f.Close()
 		runtime.GC() // get up-to-date statistics
