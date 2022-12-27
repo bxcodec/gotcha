@@ -133,6 +133,8 @@ issues:
       linters:
         - gomnd
         - dupl
+        - gocyclo
+        - gosec
 run:
   timeout: 5m
   go: "1.19"

@@ -98,13 +98,13 @@ func NewRepository(option cache.Option) internal.Repository {
 	return repo
 }
 
-// Cache ...
+// Cache represent the Cache handler
 type Cache struct {
-	sync.RWMutex
-	repo internal.Repository
+	mutex sync.RWMutex
+	repo  internal.Repository
 }
 
-// Set ...
+// Set used for setting the item to cache
 // TODO: (bxcodec)
 // Add Test for this function
 func (c *Cache) Set(key string, value interface{}) (err error) {
@@ -113,19 +113,19 @@ func (c *Cache) Set(key string, value interface{}) (err error) {
 		Value:      value,
 		StoredTime: time.Now().Unix(),
 	}
-	c.Lock()
-	c.repo.Set(document)
-	c.Unlock()
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	err = c.repo.Set(document)
 	return
 }
 
-// Get ...
+// Get will retrieve the item from cache
 // TODO: (bxcodec)
 // Add Test for this function
 func (c *Cache) Get(key string) (value interface{}, err error) {
-	c.RLock()
+	c.mutex.RLock()
 	doc, err := c.repo.Get(key)
-	c.RUnlock()
+	c.mutex.RUnlock()
 	if err != nil {
 		return
 	}
@@ -133,35 +133,35 @@ func (c *Cache) Get(key string) (value interface{}, err error) {
 	return
 }
 
-// Delete ...
+// Delete will remove the item from cache
 // TODO: (bxcodec)
 // Add Test for this function
 func (c *Cache) Delete(key string) (err error) {
-	c.Lock()
+	c.mutex.Lock()
 	_, err = c.repo.Delete(key)
-	c.Unlock()
+	c.mutex.Unlock()
 	if err != nil {
 		return
 	}
 	return
 }
 
-// GetKeys ...
+// GetKeys will retrieve all keys from cache
 // TODO: (bxcodec)
 // Add Test for this function
 func (c *Cache) GetKeys() (keys []string, err error) {
-	c.RLock()
+	c.mutex.RLock()
 	keys, err = c.repo.Keys()
-	c.RUnlock()
+	c.mutex.RUnlock()
 	return
 }
 
-// ClearCache ...
+// ClearCache will cleanup all the cache
 // TODO: (bxcodec)
 // Add Test for this function
 func (c *Cache) ClearCache() (err error) {
-	c.Lock()
+	c.mutex.Lock()
 	err = c.repo.Clear()
-	c.Unlock()
+	c.mutex.Unlock()
 	return
 }
