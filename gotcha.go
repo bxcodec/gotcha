@@ -32,7 +32,8 @@ func New(options ...*cache.Option) (c cache.Cache) {
 	}
 
 	c = &Cache{
-		repo: NewRepository(*option),
+		repo:  NewRepository(*option),
+		mutex: &sync.RWMutex{},
 	}
 	return
 }
@@ -100,7 +101,7 @@ func NewRepository(option cache.Option) internal.Repository {
 
 // Cache represent the Cache handler
 type Cache struct {
-	mutex sync.RWMutex
+	mutex *sync.RWMutex
 	repo  internal.Repository
 }
 
@@ -153,7 +154,7 @@ func (c *Cache) GetKeys() (keys []string, err error) {
 	c.mutex.RLock()
 	keys, err = c.repo.Keys()
 	c.mutex.RUnlock()
-	return
+	return keys, err
 }
 
 // ClearCache will cleanup all the cache
