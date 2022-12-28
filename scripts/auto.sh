@@ -26,7 +26,7 @@ git add .
 git commit -m "chore: update deps-$tag"
 
 git push origin --tags
-git push
+git push origin release/$TAG
 
 echo "verify the latest versionx"
 
