@@ -1,5 +1,16 @@
 #!/bin/bash
 
+if ! git diff --quiet
+then
+    printf "working tree is not clean\n\n"
+    git status
+    exit 1
+fi
+
+echo "checking out master"
+
+git checkout master
+
 echo "updating repo"
 
 git pull
