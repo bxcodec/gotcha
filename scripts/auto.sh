@@ -25,7 +25,7 @@ chmod +x scripts/tag.sh
 git add .
 git commit -m "chore: update deps-$tag"
 
-git push origin release/$TAG
+git push origin
 git push origin --tags
 
 
