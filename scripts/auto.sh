@@ -13,9 +13,7 @@ git checkout master
 
 echo "updating repo"
 
-git pull
-
-go work sync
+git pull origin master
 
 git describe --tags
 
@@ -32,6 +30,8 @@ chmod +x scripts/tag.sh
 
 ./scripts/release.sh
 ./scripts/tag.sh
+
+go work sync
 
 git add .
 git commit -m "chore: update deps-$tag"
