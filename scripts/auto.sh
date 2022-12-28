@@ -25,9 +25,8 @@ chmod +x scripts/tag.sh
 git add .
 git commit -m "chore: update deps-$tag"
 
-git push origin
 git push origin --tags
-
+git push
 
 echo "verify the latest versionx"
 
