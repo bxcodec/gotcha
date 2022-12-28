@@ -67,4 +67,4 @@ do
     (cd ./${dir} && go get -u && go mod tidy) # -compat=1.19
 done
 
-git push -u origin release/${TAG}
+git push --set-upstream origin release/${TAG}
