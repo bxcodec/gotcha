@@ -37,7 +37,7 @@ git add .
 git commit -m "chore: update deps-$tag"
 
 git push origin --tags
-git push origin release/$TAG
+git push
 
 echo "check the latest version, sleeping for 1 min for the go registry to sync up"
 
