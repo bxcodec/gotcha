@@ -3,7 +3,7 @@
 gotcha: inmemory-cache in Go (Golang) with customizable algorithm
 
 
-[![Go](https://github.com/bxcodec/gotcha/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/bxcodec/gotcha/actions/workflows/go.yml)
+[![Go](https://github.com/bxcodec/gotcha/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/bxcodec/gotcha/actions/workflows/go.yml)
 [![Go.Dev](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/bxcodec/gotcha/v2?tab=doc)
 
 ## Index
