@@ -1,24 +1,22 @@
-# gotcha
+# [DEPRECATED] gotcha
+
+> Hi all, this library is no longer maintained. I don't see any usecase when to use this. Caching logic is a critical and complex problem. There are a lot of caching solutions that you can try, including this library. I find it hard to maintain this library since I don't use it extensively. Thanks for all the support and contributions so far. You can find me at https://imantumorang.com if you later need a similar library that we can collaborate on together.
 
 gotcha: inmemory-cache in Go (Golang) with customizable algorithm
-
-
 [![Go](https://github.com/bxcodec/gotcha/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/bxcodec/gotcha/actions/workflows/go.yml)
 [![Go.Dev](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/bxcodec/gotcha/v2?tab=doc)
 
 ## Index
 
-* [Support](#support)
-* [Getting Started](#getting-started)
-* [Example](#example)
-* [Contribution](#contribution)
-
+- [Support](#support)
+- [Getting Started](#getting-started)
+- [Example](#example)
+- [Contribution](#contribution)
 
 ## Support
 
 You can file an [Issue](https://github.com/bxcodec/gotcha/issues/new).
 See documentation in [Godoc](https://godoc.org/github.com/bxcodec/gotcha)
-
 
 ## Getting Started
 
@@ -27,10 +25,11 @@ See documentation in [Godoc](https://godoc.org/github.com/bxcodec/gotcha)
 ```shell
 go get -u github.com/bxcodec/gotcha
 ```
+
 ## Example
 
-
 ### With Cache Client
+
 ```go
 package main
 
@@ -56,6 +55,7 @@ func main() {
 ```
 
 ### Without Cache Client
+
 ```go
 package main
 
@@ -101,9 +101,11 @@ Benchmark for LRU with/without MaxMemory
 # Without MaxMemory
 200000000	       776 ns/op	     150 B/op	       6 allocs/op
 ```
-If you seeking for fast performances and also your memory is high, ignore the MaxMemory options. I'm still looking for the better solutions for this problem. And if you have a better solutions, please kindly open and issue or submit a PR directly for the better results. 
+
+If you seeking for fast performances and also your memory is high, ignore the MaxMemory options. I'm still looking for the better solutions for this problem. And if you have a better solutions, please kindly open and issue or submit a PR directly for the better results.
 
 #### LRU
+
 ```go
 package main
 
@@ -134,6 +136,7 @@ func main() {
 ```
 
 #### LFU
+
 ```go
 package main
 
@@ -163,7 +166,6 @@ func main() {
 }
 ```
 
-
-
 ## Contribution
+
 - You can submit an issue or create a Pull Request (PR)
